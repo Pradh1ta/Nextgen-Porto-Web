@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
     <meta name="theme-color" content="#fcfcfc">
     <title>Cinematic Portfolio</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -610,8 +610,8 @@
             :root { --pad: 20px; --nav-bg: rgba(246, 246, 246, 0.94); }
 
             /* Navigasi di bawah: terjangkau satu tangan, memenuhi lebar layar */
-            nav { top: auto; bottom: 0; padding: 0 14px calc(12px + var(--safe-b)); }
-            .nav-container { width: 100%; max-width: 400px; gap: 2px; padding: 5px; border-radius: 32px; box-shadow: 0 12px 32px rgba(0,0,0,0.16), 0 0 0 1px rgba(0,0,0,0.05); animation-name: navRise; }
+            nav { top: auto; bottom: 0; padding: 0 14px calc(14px + var(--safe-b)); }
+            .nav-container { width: 100%; max-width: 400px; gap: 2px; padding: 5px; border-radius: 32px; box-shadow: 0 10px 28px rgba(0,0,0,0.14), 0 0 0 1px rgba(0,0,0,0.06); animation-name: navRise; }
             .nav-item { flex: 1; text-align: center; font-size: 14px; padding: 13px 4px; border-radius: 26px; }
             .nav-indicator { border-radius: 26px; }
             body.kb-open nav { opacity: 0; visibility: hidden; }
@@ -836,6 +836,11 @@
         /* Fix elemen About "bergeser" saat hover: efek tilt/lift membuat tinggi konten sesaat melewati tinggi layar,
            scrollbar vertikal muncul-hilang dan seluruh isi halaman ikut bergeser. Ruang scrollbar kini selalu dicadangkan. */
         .page { scrollbar-gutter: stable both-edges; }
+
+        /* Fix Android/Mi Browser: scene selebar 7 halaman membuat browser "zoom-out untuk muat konten".
+           Dokumen dikunci seukuran layar (tanpa overflow yang bisa dihitung browser) dan zoom-out dimatikan via meta viewport. */
+        html { overflow: hidden; width: 100%; height: 100%; }
+        body { position: fixed; inset: 0; width: 100%; height: 100%; overflow: hidden; }
     </style>
 </head>
 <body>
@@ -1435,6 +1440,14 @@
         // --- Ponsel: sembunyikan nav bawah saat keyboard terbuka (input search) ---
         document.addEventListener('focusin', e => { if (e.target.matches('input, textarea')) document.body.classList.add('kb-open'); });
         document.addEventListener('focusout', () => document.body.classList.remove('kb-open'));
+        let baseH = window.innerHeight;
+        const kbCheck = () => {
+            baseH = Math.max(baseH, window.innerHeight);
+            const h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+            if (h > baseH * 0.85) document.body.classList.remove('kb-open');
+        };
+        window.addEventListener('resize', kbCheck);
+        if (window.visualViewport) window.visualViewport.addEventListener('resize', kbCheck);
 
         // --- Skills: tombol + dot (ponsel); panah desktop memakai mekanisme yang sama ---
         const skillsEl = document.querySelector('.skills-carousel');
