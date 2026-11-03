@@ -1,0 +1,1633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#fcfcfc">
+    <title>Cinematic Portfolio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+    <style>
+        @font-face {
+            font-family: Benzin;
+            src: url(assets/fonts/Benzin.TTF);
+        }
+        @font-face {
+            font-family: Benzin-T;
+            src: url(assets/fonts/Benzin-T.TTF);
+        }
+
+        :root {
+            --bg-color: #fcfcfc;
+            --text-main: #1d1d1f;
+            --text-muted: #555555;
+            --accent-cyan: #00c4b5;
+            --nav-bg: rgba(245, 245, 245, 0.82); /* blur dihapus (berat saat scroll), alpha dinaikkan agar tampilan setara */
+            --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+            --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+            --ease-cinematic: cubic-bezier(0.7, 0, 0.2, 1);
+            --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);      /* overshoot kecil */
+            --ease-soft-spring: cubic-bezier(0.5, 1.3, 0.4, 1);    /* overshoot halus */
+            --transition-cinematic: 1.1s var(--ease-cinematic);
+            --enter-delay: 0.38s;
+            --page-in-delay: 0.3s; /* keduanya diisi ulang oleh JS di goToPage() agar sinkron dengan kedatangan slide */
+            --font-syne: 'Syne', sans-serif;
+            --font-inter: 'Inter', sans-serif;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: var(--font-inter); background-color: var(--bg-color); color: var(--text-main); overflow: hidden; width: 100vw; height: 100vh; }
+        
+        /* Font Global */
+        .syne { font-family: var(--font-syne); letter-spacing: -0.03em; }
+        .inter { font-family: var(--font-inter); }
+
+        /* --- Navigasi Sesuai Slide 1 --- */
+        nav { position: fixed; top: 0; width: 100%; display: flex; justify-content: center; padding: 25px; z-index: 100; pointer-events: none; }
+        .nav-container { position: relative; display: flex; gap: 30px; background: var(--nav-bg); padding: 12px 35px; border-radius: 40px; pointer-events: auto; }
+        .nav-item { position: relative; z-index: 1; cursor: pointer; user-select: none; font-family: var(--font-syne); font-weight: 600; font-size: 16px; transition: color 0.5s var(--ease-out), background-color 0.5s var(--ease-out), transform 0.5s var(--ease-out); padding: 6px 18px; border-radius: 20px; }
+        .nav-item.active { color: white; } /* Pill biru gelap (#00607a) kini digeser oleh .nav-indicator */
+        .nav-item:hover:not(.active) { background: rgba(0, 96, 122, 0.09); }
+        .nav-item:active { transform: scale(0.95); transition-duration: 0.15s; }
+        .nav-indicator { position: absolute; top: 0; left: 0; width: 0; height: 0; background: #00607a; border-radius: 20px; z-index: 0; pointer-events: none; transition: transform 0.8s var(--ease-soft-spring), width 0.8s var(--ease-soft-spring), height 0.6s var(--ease-out); will-change: transform, width; }
+
+        /* --- GLOBAL FIXED BACKGROUND (Grid) --- */
+        #fixed-grid-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-image: url('assets/common/grid-bg.png');
+            background-size: 1000px; /* Dipertahankan: Editan 1000px Anda */
+            z-index: 0; /* Lapisan paling dasar di bawah semua kotak terbang */
+            pointer-events: none;
+        }
+
+        /* --- DEKORASI DINAMIS (Pure CSS Generative System) --- */
+        .floating-square { 
+            width: 100%; height: 100%; 
+            background-color: #1a1a1a; 
+            pointer-events: none;
+            will-change: transform;
+        }
+        .floating-square.blur { filter: blur(7px); opacity: 0.85; }
+        .floating-square.bg { opacity: 0.15; }
+        .floating-square.mid { opacity: 0.7; }
+        
+        @keyframes floatAnim {
+            0% { transform: translate(0px, 0px) rotate(0deg); }
+            100% { transform: translate(var(--move-x), var(--move-y)) rotate(var(--rot)); }
+        }
+
+        /* --- Cinematic Scene & Pages --- */
+        #scene { position: absolute; top: 0; left: 0; height: 100vh; display: flex; transition: transform var(--transition-cinematic); will-change: transform; z-index: 10; }
+        .page { width: 100vw; height: 100vh; flex-shrink: 0; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 120px 0 100px; opacity: 0; visibility: hidden; transform: scale(0.96); translate: calc(var(--side, 1) * 7vw) 0; pointer-events: none; transition: opacity 0.55s var(--ease-in-out), transform 0.7s var(--ease-in-out), translate 0.9s var(--ease-in-out), visibility 0s linear 0.75s; overflow-y: auto; overflow-x: hidden; }
+        .page.active { opacity: 1; visibility: visible; transform: scale(1); translate: 0 0; pointer-events: auto; transition: opacity 1.1s var(--ease-out) var(--page-in-delay, 0.3s), transform 1.5s var(--ease-out) var(--page-in-delay, 0.3s), translate 1.6s var(--ease-out) var(--page-in-delay, 0.3s), visibility 0s; }
+        .page-content { width: 100%; max-width: 1280px; margin: 0 auto; position: relative; z-index: 2; padding: 0 40px; }
+        
+        /* Placeholder Background Gambar per Halaman (jika nanti dibutuhkan) */
+        .page-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; background-size: cover; background-position: center; pointer-events: none; }
+        
+        /* Scrollbar */
+        .page::-webkit-scrollbar { width: 6px; }
+        .page::-webkit-scrollbar-track { background: transparent; }
+        .page::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); border-radius: 10px; }
+
+        /* Component: Cards & Buttons */
+        .card { background: white; border-radius: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.06); position: relative; cursor: pointer; transition: transform 0.7s var(--ease-out), box-shadow 0.7s var(--ease-out); }
+        .card:hover { transform: translateY(-6px); box-shadow: 0 20px 50px rgba(0,0,0,0.10); }
+        .card:active { transform: translateY(-2px) scale(0.985); transition-duration: 0.18s; }
+        .card-dark { background: #3c3c3c; color: white; }
+        .card-dark .arrow-icon, .card .arrow-icon-dark { background: #555; color: white; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; position: absolute; right: 20px; top: 20px; font-weight: bold; }
+        .nav-back { display: inline-flex; align-items: center; gap: 10px; font-family: var(--font-syne); font-size: 22px; font-weight: 700; cursor: pointer; user-select: none; margin-bottom: 30px; background: white; padding: 5px 15px 5px 5px; border-radius: 10px; transition: transform 0.6s var(--ease-out), box-shadow 0.6s var(--ease-out); }
+        .nav-back span { background: #00607a; color: white; padding: 2px 8px; border-radius: 5px; font-size: 16px; transition: transform 0.6s var(--ease-out); }
+        .nav-back:hover { box-shadow: 0 8px 22px rgba(0,0,0,0.08); }
+        .nav-back:hover span { transform: translateX(-3px); }
+        .nav-back:active { transform: scale(0.97); transition-duration: 0.15s; }
+
+        /* =========================================
+           SLIDE 1: HOME
+           ========================================= */
+        #home { justify-content: center; }
+        .home-tag { background: var(--accent-cyan); color: white; padding: 6px 16px; border-radius: 40px; font-family: Benzin; font-weight: 700; font-size: 20px; margin-bottom: 28px; display: inline-block; position: relative; top: 30px; }
+        #home h1 { font-size: 6.5vw; line-height: 0.95; margin-bottom: 20px; color: #1a1a1a; }
+        #home p { font-size: 18px; color: var(--text-muted); font-weight: 500; }
+
+        /* =========================================
+           SLIDE 2: ABOUT MAIN
+           ========================================= */
+        .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; width: 65%; margin-left: 0; }
+        .about-title { font-size: 4.2vw; line-height: 1; margin-bottom: 30px; }
+        .about-title span { background: linear-gradient(var(--accent-cyan), var(--accent-cyan)) no-repeat 0 0 / 100% 100%; color: white; padding: 0 10px; display: inline-block; }
+        
+        .social-card-main { padding: 30px; border-radius: 40px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; background: linear-gradient(135deg, #444, #222); box-shadow: 0 15px 30px rgba(0,0,0,0.15); }
+        .social-card-main h3 { font-family: var(--font-inter); font-weight: 600; font-size: 20px; color: white; }
+        .social-card-main .link-icon { font-size: 24px; color: white; }
+
+        .skills-card-main { padding: 30px; border-radius: 40px; position: relative; overflow: hidden; }
+        .skills-card-main h3 { font-family: var(--font-inter); font-weight: 600; font-size: 20px; margin-bottom: 25px; }
+        .skill-list-mini { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .skill-item-mini { display: flex; align-items: center; gap: 10px; }
+        .skill-item-mini img { width: 35px; border-radius: 8px; }
+        .skill-item-mini .bar-bg { width: 80px; height: 6px; background: #eaeaea; border-radius: 5px; margin-top: 5px; }
+        .skill-item-mini .bar-fill { height: 100%; background: var(--accent-cyan); border-radius: 5px; }
+        
+        .about-me-card { padding: 35px; border-radius: 40px; height: 57%; display: flex; flex-direction: column; overflow: hidden; position: relative; } /* Dipertahankan: Editan 57% Anda */
+        .about-me-card h3 { font-family: var(--font-inter); font-size: 24px; margin-bottom: 15px; }
+        .about-me-card p { font-size: 16px; line-height: 1.6; color: var(--text-muted); }
+        .about-me-card p strong { color: #1a1a1a; }
+        .about-wave-bg {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 300px; /* Sesuaikan angka ini dengan tinggi proporsional gambar Anda */
+            background-image: url('assets/common/wave-bg-1.png'); /* Ganti sesuai letak & nama file */
+            background-size: 100% 100%; /* Memaksa gambar merentang pas memenuhi ruang bawah */
+            background-position: bottom center;
+            background-repeat: no-repeat;
+            transform: translateY(0px);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .skills-wave-bg {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 200px; /* Sesuaikan angka ini dengan tinggi proporsional gambar Anda */
+            background-image: url('assets/common/wave-bg-2.png'); /* Ganti sesuai letak & nama file */
+            background-size: 100% 100%; /* Memaksa gambar merentang pas memenuhi ruang bawah */
+            background-position: bottom center;
+            background-repeat: no-repeat;
+            transform: translateY(4px);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .skills-card-main h3, 
+        .skills-card-main, 
+        .skills-card-main .skill-list-mini { 
+            position: relative; 
+            z-index: 2; 
+        }
+
+
+        .profile-img-main { will-change: transform; position: absolute; right: 0; bottom: 0; height: 95vh; object-fit: contain; z-index: 10; pointer-events: none; }
+
+        /* =========================================
+           SLIDE 3: SOFTWARE SKILLS (Detail)
+           ========================================= */
+        .skills-carousel { display: flex; justify-content: center; align-items: stretch; gap: 40px; margin-top: 50px; }
+        .skill-large-card { position: relative; display: flex; flex-direction: column; isolation: isolate; width: 280px; text-align: left; padding: 20px; }
+        /* Ellipse shadow di belakang ikon besar */
+        .skill-large-card::before { content: ''; position: absolute; top: 5px; left: 50%; transform: translateX(-50%); width: 180px; height: 180px; background: #e6e6e6; border-radius: 50%; z-index: -1; }
+        .skill-icon-huge { width: 150px; display: block; margin: 0 auto 30px; filter: drop-shadow(0 20px 20px rgba(0,0,0,0.15)); }
+        .skill-large-card h3 { font-size: 28px; margin-bottom: 10px; }
+        .skill-large-card p { font-size: 14px; color: var(--text-muted); line-height: 1.5; margin-bottom: 20px; min-height: 60px; flex: 1; }
+        .progress-track { width: 100%; height: 8px; background: #e0e0e0; border-radius: 10px; }
+        .progress-fill { height: 100%; background: var(--accent-cyan); border-radius: 10px; }
+
+        /* =========================================
+           SLIDE 4: ABOUT ME (Detail)
+           ========================================= */
+        .about-detail-card { background: white; border-radius: 40px; padding: 50px; box-shadow: 0 15px 40px rgba(0,0,0,0.05); position: relative; margin-top: 20px; }
+        .lanyard-img { position: absolute; right: -30px; top: -80px; width: 500px; pointer-events: none; filter: drop-shadow(0 30px 30px rgba(0,0,0,0.2)); }
+        .tags-container { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px; }
+        .tag-outline { border: 1px solid #ccc; padding: 6px 15px; border-radius: 20px; font-size: 13px; font-family: var(--font-inter); color: var(--text-muted); }
+        
+        .timeline-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 50px; margin-top: 50px; }
+        .timeline-list { list-style: none; border-left: 2px solid #ddd; padding-left: 30px; margin-top: 20px; }
+        .timeline-list li { margin-bottom: 30px; position: relative; }
+        .timeline-list li::before { content: ''; position: absolute; left: -37px; top: 4px; width: 12px; height: 12px; background: #aaa; border-radius: 50%; border: 3px solid white; }
+        .timeline-year { font-weight: 700; font-size: 18px; margin-bottom: 5px; font-family: var(--font-inter); }
+
+        /* =========================================
+           SLIDE 5: SOCIAL MEDIA
+           ========================================= */
+        .social-title { font-size: 4.5vw; line-height: 0.95; margin-bottom: 50px; }
+        .social-track { display: flex; justify-content: center; gap: 20px; position: relative; margin-bottom: 40px; }
+        .social-card { width: 220px; height: 300px; background: white; border-radius: 30px; padding: 25px 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); display: flex; flex-direction: column; overflow: hidden; position: relative; }
+        .social-card-header { display: flex; justify-content: space-between; font-size: 10px; color: var(--text-muted); margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .social-card h3 { font-size: 22px; line-height: 1; margin-bottom: 5px; }
+        .social-card p { font-size: 10px; color: var(--text-muted); word-break: break-all; }
+        
+        .social-icon-huge { width: 160px; position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); }
+        .social-arrow { position: absolute; bottom: 20px; left: 20px; width: 35px; height: 35px; background: #222; color: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; z-index: 2; }
+        
+        /* =========================================
+           SLIDE 6: GALLERY
+           ========================================= */
+        .gallery-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0px; position: relative; }
+        /* Artwork di ruang kosong sisi kanan judul (absolute: tidak mempengaruhi layout). Ganti file assets/gallery/header-art.png untuk mengganti gambar. */
+        .gallery-hero-art {
+            position: absolute; right: 0; bottom: -24px; z-index: 0; height: auto; pointer-events: none; user-select: none;
+            width: min(520px, calc(min(100vw - 80px, 1200px) - 48vw)); /* menyesuaikan sisa ruang di kanan judul */
+            filter: drop-shadow(0 22px 28px rgba(0,0,0,0.16));
+        }
+        
+        .search-wrap { display: flex; align-items: stretch; gap: 15px; margin-top: 30px; }
+        .search-box { border: 1.5px solid #1a1a1a; border-radius: 40px; padding: 12px 25px; display: flex; align-items: center; width: 280px; background: transparent; }
+        .search-box input { border: none; outline: none; width: 100%; font-family: var(--font-inter); font-size: 16px; background: transparent; }
+        .btn-cyan { background: var(--accent-cyan); color: white; padding: 14px 35px; border-radius: 40px; font-family: var(--font-syne); font-weight: 600; cursor: pointer; font-size: 16px; }
+
+        .retro-profile { position: relative; width: 420px; height: 200px; display: flex; align-items: center; }
+        .retro-frame-img { position: absolute; right: 0; width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
+        .retro-content { position: relative; display: flex; align-items: center; gap: 20px; padding-left: 60px; }
+        .retro-logo { width: 85px; height: 85px; background: var(--accent-cyan); border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 35px; font-family: var(--font-syne); font-weight: 700; }
+        
+        .gallery-middle { position: relative; width: 100%; padding: 40px 0; margin-bottom: 30px; }
+        .wave-full-bg { position: absolute; top: 0; left: -10vw; width: 120vw; height: 100%; object-fit: cover; z-index: -1; pointer-events: none; }
+        
+        /* Track horizontal: scrollbar disembunyikan, navigasi lewat tombol kiri/kanan (swipe & trackpad tetap berfungsi) */
+        .project-track { display: flex; gap: 25px; overflow-x: auto; padding: 16px 24px 36px; margin: -16px -24px -1px; scroll-padding-inline: 24px; scroll-snap-type: x mandatory; scrollbar-width: none; -ms-overflow-style: none; }
+        .project-track::-webkit-scrollbar { display: none; }
+
+        /* Tombol navigasi: menggantikan posisi scrollbar (di bawah kartu, rata kanan dengan tepi kartu terakhir yang terlihat) */
+        .gallery-nav-wrap { position: absolute; top: 408px; left: var(--track-w, 1115px); transform: translateX(-100%); z-index: 3; display: flex; gap: 10px; }
+        .gallery-nav {
+            width: 38px; height: 38px; padding: 0; border-radius: 50%; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            color: white; background: #1a1a1a; border: 1px solid rgba(255,255,255,0.28);
+            box-shadow: 0 6px 16px -6px rgba(0,0,0,0.45);
+            transition: transform 0.6s var(--ease-out), background-color 0.35s ease, box-shadow 0.6s var(--ease-out), opacity 0.4s ease;
+        }
+        .gallery-nav svg { width: 16px; height: 16px; transition: transform 0.6s var(--ease-out); }
+        .gallery-nav:hover:not(:disabled) { background: var(--accent-cyan); transform: scale(1.08); box-shadow: 0 8px 20px -6px rgba(0,196,181,0.55); }
+        .gallery-nav.prev:hover:not(:disabled) svg { transform: translateX(-2px); }
+        .gallery-nav.next:hover:not(:disabled) svg { transform: translateX(2px); }
+        .gallery-nav:active:not(:disabled) { transform: scale(0.94); transition-duration: 0.15s; }
+        .gallery-nav:focus-visible { outline: 2px solid var(--accent-cyan); outline-offset: 3px; }
+        .gallery-nav:disabled { opacity: 0.3; cursor: default; }
+
+        /* =========================================
+           GALLERY CARDS — redesign tampilan (layout & ukuran tidak berubah)
+           ========================================= */
+        #gallery .page-content { counter-reset: pc; }
+
+        .project-card-v, .project-card-h {
+            flex-shrink: 0; border-radius: 28px; background-size: cover; background-position: center;
+            position: relative; overflow: hidden; isolation: isolate; cursor: pointer; counter-increment: pc;
+            outline: 2px solid transparent; outline-offset: 5px;
+            transition: outline-color 0.3s ease; /* transform & cahaya digerakkan JS (tanpa transisi box-shadow = tanpa repaint) */
+        }
+        .project-card-v { width: 260px; height: 360px; scroll-snap-align: start; box-shadow: 0 2px 4px rgba(0,0,0,0.10), 0 16px 26px -10px rgba(0,0,0,0.40); }
+        .project-card-h { height: 260px; box-shadow: 0 2px 4px rgba(0,0,0,0.08), 0 14px 24px -10px rgba(0,0,0,0.30); }
+
+        /* Hover & fokus keyboard memakai state yang sama */
+        :is(.project-card-v, .project-card-h):focus-visible { transform: translateY(-8px) scale(1.012); }
+        :is(.project-card-v, .project-card-h):focus-visible { outline-color: var(--accent-cyan); }
+        :is(.project-card-v, .project-card-h):active { transform: translateY(-4px) scale(0.99); transition-duration: 0.2s; }
+
+        /* Layer gambar: memakai artwork yang sama (inherit), di-zoom pelan saat hover */
+        .project-card-v::before, .project-card-h::before { content: ''; position: absolute; inset: 0; background: inherit; transform: scale(1); transition: transform 1.4s var(--ease-out); }
+        :is(.project-card-v, .project-card-h):is(:hover, :focus-visible)::before { transform: scale(1.08); }
+
+        /* Highlight cahaya yang mengikuti kursor (posisi --mx / --my diisi JS) */
+        .project-card-v::after, .project-card-h::after {
+            content: ''; position: absolute; left: 0; top: 0; width: 480px; height: 480px; pointer-events: none; opacity: 0;
+            background: radial-gradient(circle closest-side, rgba(255,255,255,0.26), rgba(255,255,255,0));
+            transform: translate3d(calc(var(--mx, 130px) - 240px), calc(var(--my, 90px) - 240px), 0); /* compositor-only, tanpa mix-blend */
+            transition: opacity 0.8s var(--ease-out);
+        }
+        :is(.project-card-v, .project-card-h):is(:hover, :focus-visible)::after { opacity: 1; }
+
+        /* Lapisan info: gradien ringan (artwork tetap fokus) + garis tepi halus */
+        .project-info {
+            position: absolute; inset: 0; padding: 22px; border-radius: inherit; isolation: isolate;
+            display: flex; justify-content: space-between; align-items: flex-end; gap: 14px; color: white;
+        }
+        .project-info::before {
+            content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none;
+            background:
+                linear-gradient(to top, rgba(0,0,0,0.86) 0%, rgba(0,0,0,0.52) 30%, rgba(0,0,0,0) 62%),
+                linear-gradient(to bottom, rgba(0,0,0,0.40) 0%, rgba(0,0,0,0) 26%);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.16);
+        }
+        /* Nomor urut arsip (otomatis lewat CSS counter) */
+        .project-info::after {
+            content: counter(pc, decimal-leading-zero); position: absolute; top: 23px; right: 22px;
+            font: 700 12px/1 var(--font-syne); letter-spacing: 0.1em; font-variant-numeric: tabular-nums;
+            color: rgba(255,255,255,0.7); transition: color 0.5s ease;
+        }
+
+        .project-tag {
+            position: absolute; top: 18px; left: 18px; display: inline-flex; align-items: center; gap: 7px;
+            padding: 6px 12px 6px 10px; border-radius: 999px;
+            font: 600 10px/1 var(--font-inter); letter-spacing: 0.14em; text-transform: uppercase; color: white;
+            background: rgba(24,24,24,0.34); border: 1px solid rgba(255,255,255,0.26);
+        }
+        .project-tag::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--accent-cyan); box-shadow: 0 0 0 3px rgba(0,196,181,0.22); }
+
+        .project-info > div:first-child { min-width: 0; } /* JANGAN beri transform di sini: akan menjadi containing block bagi .project-tag */
+        .project-info h4 { font-size: 27px; line-height: 1.02; font-weight: 700; letter-spacing: -0.025em; margin: 0 0 12px; text-shadow: 0 1px 14px rgba(0,0,0,0.35); text-wrap: balance; transition: transform 0.9s var(--ease-out); }
+        .project-card-h .project-info h4 { font-size: 22px; margin-bottom: 10px; }
+        .project-info p { display: flex; align-items: center; font: 600 10px/1 var(--font-inter); letter-spacing: 0.16em; text-transform: uppercase; color: rgba(255,255,255,0.72); transition: color 0.5s ease, transform 0.9s var(--ease-out); }
+        .project-info p::before { content: ''; width: 16px; height: 1px; background: currentColor; margin-right: 9px; transition: width 0.9s var(--ease-out); }
+
+        .project-link-arrow {
+            flex-shrink: 0; width: 42px; height: 42px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 600; color: white;
+            background: rgba(24,24,24,0.34); border: 1px solid rgba(255,255,255,0.34);
+            transition: transform 0.9s var(--ease-out), background-color 0.4s ease, border-color 0.4s ease, box-shadow 0.6s var(--ease-out);
+        }
+        :is(.project-card-v, .project-card-h):is(:hover, :focus-visible) .project-link-arrow {
+            transform: rotate(45deg) scale(1.08); background: var(--accent-cyan); border-color: var(--accent-cyan); box-shadow: 0 8px 20px rgba(0,196,181,0.45);
+        }
+        :is(.project-card-v, .project-card-h):active .project-link-arrow { transform: rotate(45deg) scale(0.94); transition-duration: 0.15s; }
+        :is(.project-card-v, .project-card-h):is(:hover, :focus-visible) .project-info :is(h4, p) { transform: translateY(-3px); }
+        :is(.project-card-v, .project-card-h):is(:hover, :focus-visible) .project-info p { color: white; }
+        :is(.project-card-v, .project-card-h):is(:hover, :focus-visible) .project-info p::before { width: 30px; }
+        :is(.project-card-v, .project-card-h):is(:hover, :focus-visible) .project-info::after { color: white; }
+
+        .gallery-grid-h { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; padding-bottom: 60px; }
+
+        /* =========================================
+           SLIDE 7: REVIEW
+           ========================================= */
+        #review { justify-content: center; text-align: center; }
+        .review-header { display: flex; justify-content: center; gap: 40px; align-items: center; margin-bottom: 50px; }
+        .review-header h3 { flex: 1 1 0; min-width: 0; font-size: 22px; text-align: right; line-height: 1.3; }
+        .review-header h3.right { text-align: left; color: var(--text-muted); }
+        .review-header img { width: 45px; flex-shrink: 0; }
+        .massive-text { font-size: 16vw; line-height: 0.75; margin: 0; color: #1a1a1a; letter-spacing: -0.04em; }
+        .massive-outline { font-size: 16vw; line-height: 0.75; margin: 0; color: transparent; -webkit-text-stroke: 2px #d0d0d0; letter-spacing: -0.04em; }
+
+        /* =========================================
+           MOTION & POLISH LAYER
+           ========================================= */
+
+        /* Entrance bertahap (stagger) saat halaman aktif. Memakai properti `translate`
+           terpisah dari `transform` agar tidak bentrok dengan efek hover. */
+        @keyframes rvIn     { from { opacity: 0; translate: 0 28px; } to { opacity: 1; translate: 0 0; } }
+        @keyframes rvInBlur { from { opacity: 0; translate: 0 36px; filter: blur(10px); } to { opacity: 1; translate: 0 0; filter: blur(0); } }
+        @keyframes rvInSide { from { opacity: 0; translate: 70px 0; } to { opacity: 1; translate: 0 0; } }
+        @keyframes rvInFade { from { opacity: 0; } to { opacity: 1; } }
+        .page.active .rv { animation: rvIn 1.35s var(--ease-out) calc(var(--enter-delay) + var(--i, 0) * 90ms) backwards; }
+        .page.active .rv-blur { animation-name: rvInBlur; animation-duration: 1.7s; }
+        .page.active .rv-side { animation-name: rvInSide; animation-duration: 1.7s; }
+        .page.active .rv-fade { animation-name: rvInFade; animation-duration: 1.8s; }
+
+        /* Progress bar tumbuh dari kiri */
+        @keyframes barGrow { from { clip-path: inset(0 100% 0 0 round 10px); } to { clip-path: inset(0 0 0 0 round 10px); } }
+        .page.active .progress-fill, .page.active .bar-fill { animation: barGrow 1.5s var(--ease-out) calc(var(--enter-delay) + 0.5s) backwards; }
+
+        /* Floating halus */
+        @keyframes floatSoft { 0%, 100% { translate: 0 0; } 50% { translate: 0 -7px; } }
+        @keyframes lanyardSway { 0%, 100% { rotate: -0.9deg; } 50% { rotate: 0.9deg; } }
+        .skill-icon-huge { animation: floatSoft 5.5s ease-in-out infinite; transition: transform 0.9s var(--ease-out), filter 0.9s var(--ease-out); }
+        .skill-large-card:nth-child(3) .skill-icon-huge { animation-delay: -1.8s; }
+        .skill-large-card:nth-child(4) .skill-icon-huge { animation-delay: -3.6s; }
+        .skill-large-card:hover .skill-icon-huge { transform: translateY(-4px) scale(1.05); filter: drop-shadow(0 26px 24px rgba(0,0,0,0.18)); }
+        .lanyard-img { transform-origin: 50% 0; animation: lanyardSway 2.5s ease-in-out infinite; }
+        .page:not(.active) .skill-icon-huge, .page:not(.active) .lanyard-img { animation-play-state: paused; }
+
+        /* Micro-interactions */
+        .card .arrow-icon-dark { transition: transform 0.6s var(--ease-out), background-color 0.35s ease; }
+        .card:hover .arrow-icon-dark { transform: translate(2px, -2px); background: var(--accent-cyan); }
+        .social-card-main .link-icon { transition: transform 0.7s var(--ease-out); }
+        .social-card-main:hover .link-icon { transform: translate(2px, -2px) rotate(-8deg) scale(1.1); }
+        .social-card-main.card:hover { box-shadow: 0 24px 44px rgba(0,0,0,0.22); }
+
+        .social-card { transition: transform 0.7s var(--ease-out), box-shadow 0.7s var(--ease-out); }
+        .social-card:hover { transform: translateY(-8px); box-shadow: 0 22px 44px rgba(0,0,0,0.09); }
+        .social-icon-huge { transition: transform 0.9s var(--ease-out); }
+        .social-card:hover .social-icon-huge { transform: translateX(-50%) translateY(-6px) scale(1.04); }
+
+        .carousel-arrow { align-self: center; user-select: none; transition: transform 0.6s var(--ease-out); }
+        .carousel-arrow.prev:hover { transform: translateX(-5px) scale(1.12); }
+        .carousel-arrow.next:hover { transform: translateX(5px) scale(1.12); }
+        .carousel-arrow:active { transform: scale(0.9); transition-duration: 0.15s; }
+
+        .search-box { transition: border-color 0.4s ease, box-shadow 0.5s var(--ease-out); }
+        .search-box:focus-within { border-color: var(--accent-cyan); box-shadow: 0 0 0 4px rgba(0, 196, 181, 0.15); }
+        .btn-cyan { position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; user-select: none; transition: transform 0.6s var(--ease-out), box-shadow 0.6s var(--ease-out); }
+        .btn-cyan:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(0, 196, 181, 0.35); }
+        .btn-cyan:active { transform: translateY(0) scale(0.96); box-shadow: 0 4px 10px rgba(0, 196, 181, 0.3); transition-duration: 0.15s; }
+
+        /* =========================================
+           MOTION SYSTEM v2
+           Prinsip: hanya opacity / transform / translate / rotate / scale (compositor-friendly).
+           Varian entrance dipasang per elemen lewat JS (lihat revealMap).
+           ========================================= */
+        @keyframes rvPop      { 0% { opacity: 0; scale: .5; rotate: -10deg; } 55% { opacity: 1; scale: 1.08; rotate: 2deg; } 100% { opacity: 1; scale: 1; rotate: 0deg; } }
+        @keyframes rvSpin     { 0% { opacity: 0; scale: .3; rotate: -200deg; } 60% { opacity: 1; scale: 1.15; } 100% { opacity: 1; scale: 1; rotate: 0deg; } }
+        @keyframes rvWipe     { from { opacity: 0; clip-path: inset(0 100% 0 0); translate: -18px 0; } to { opacity: 1; clip-path: inset(0 -2% 0 -2%); translate: 0 0; } }
+        @keyframes rvWipeUp   { from { opacity: 0; clip-path: inset(100% 0 0 0); translate: 0 30px; } to { opacity: 1; clip-path: inset(-2% 0 -2% 0); translate: 0 0; } }
+        @keyframes rvTilt     { from { opacity: 0; translate: 0 70px; rotate: -3deg; scale: .92; } 60% { opacity: 1; } to { opacity: 1; translate: 0 0; rotate: 0deg; scale: 1; } }
+        @keyframes rvFlip     { from { opacity: 0; transform: perspective(900px) translateY(60px) rotateX(-40deg); } to { opacity: 1; transform: perspective(900px) translateY(0) rotateX(0); } }
+        @keyframes rvFan      { from { opacity: 0; translate: 0 60px; rotate: var(--fan, 0deg); scale: .9; } to { opacity: 1; translate: 0 0; rotate: 0deg; scale: 1; } }
+        @keyframes rvRise     { from { opacity: 0; translate: 0 9vh; scale: 1.04; } to { opacity: 1; translate: 0 0; scale: 1; } }
+        @keyframes rvCard     { from { opacity: 0; translate: 110px 0; rotate: 4deg; scale: .9; } to { opacity: 1; translate: 0 0; rotate: 0deg; scale: 1; } }
+        @keyframes rvLeft     { from { opacity: 0; translate: -60px 0; } to { opacity: 1; translate: 0 0; } }
+        @keyframes rvDrop     { 0% { opacity: 0; translate: 0 -130%; } 55% { opacity: 1; translate: 0 6%; } 78% { translate: 0 -2%; } 100% { opacity: 1; translate: 0 0; } }
+        @keyframes rvChar     { from { opacity: 0; translate: 0 50%; rotate: 7deg; scale: .9; } to { opacity: 1; translate: 0 0; rotate: 0deg; scale: 1; } }
+        @keyframes rvCharDown { from { opacity: 0; translate: 0 -60%; rotate: -7deg; scale: .9; } to { opacity: 1; translate: 0 0; rotate: 0deg; scale: 1; } }
+        @keyframes rvHighlight{ from { background-size: 0 100%; } to { background-size: 100% 100%; } }
+        @keyframes navDrop    { from { opacity: 0; translate: 0 -70px; scale: .92; } to { opacity: 1; translate: 0 0; scale: 1; } }
+        @keyframes spinSlow   { to { rotate: 360deg; } }
+
+        .page.active .rv-pop     { animation-name: rvPop;    animation-duration: 1.2s; animation-timing-function: var(--ease-out); }
+        .page.active .rv-spin    { animation-name: rvSpin;   animation-duration: 1.6s; animation-timing-function: var(--ease-out); }
+        .page.active .rv-wipe    { animation-name: rvWipe;   animation-duration: 1.4s; }
+        .page.active .rv-wipe-up { animation-name: rvWipeUp; animation-duration: 1.3s; }
+        .page.active .rv-tilt    { animation-name: rvTilt;   animation-duration: 1.6s; animation-timing-function: var(--ease-soft-spring); }
+        .page.active .rv-flip    { animation-name: rvFlip;   animation-duration: 1.5s; animation-timing-function: var(--ease-soft-spring); }
+        .page.active .rv-fan     { animation-name: rvFan;    animation-duration: 1.6s; animation-timing-function: var(--ease-spring); }
+        .page.active .rv-rise    { animation-name: rvRise;   animation-duration: 1.9s; }
+        .page.active .rv-card    { animation-name: rvCard;   animation-duration: 1.5s; animation-timing-function: var(--ease-soft-spring); }
+        .page.active .rv-left    { animation-name: rvLeft;   animation-duration: 1.6s; }
+        .rv-flip { transform-origin: 50% 100%; }
+
+        /* Teks dipecah per huruf (JS splitChars) */
+        .word { display: inline-block; white-space: nowrap; }
+        .ch { display: inline-block; }
+        .page.active .ch { animation: rvChar 1.25s var(--ease-out) calc(var(--enter-delay) + var(--c, 0) * 34ms) backwards; }
+        .massive-outline .ch { animation-name: rvCharDown; }
+        .massive-text .ch, .massive-outline .ch { transition: translate 0.9s var(--ease-spring), -webkit-text-stroke-color 0.5s ease; }
+        .massive-text .ch:hover { translate: 0 -4%; }
+        .massive-outline .ch:hover { translate: 0 4%; -webkit-text-stroke-color: var(--accent-cyan); }
+
+        /* Highlight "Designer / Better" menyapu dari kiri */
+        .page.active .about-title span { animation: rvHighlight 1.1s var(--ease-out) calc(var(--enter-delay) + 0.55s) backwards; }
+
+        /* Detail per halaman */
+        .page.active .lanyard-img { animation: rvDrop 1.7s var(--ease-spring) calc(var(--enter-delay) + 0.35s) backwards, lanyardSway 2.5s ease-in-out infinite; }
+        .page.active .tag-outline { animation: rvPop 0.9s var(--ease-out) calc(var(--enter-delay) + 0.7s + var(--t, 0) * 70ms) backwards; }
+        .page.active #social .page-content > div:last-child > div { animation: barGrow 1.6s var(--ease-out) calc(var(--enter-delay) + 0.9s) backwards; }
+        .social-icon-huge { animation: floatSoft 5s ease-in-out infinite; }
+        .social-card:nth-child(2) .social-icon-huge { animation-delay: -1s; }
+        .social-card:nth-child(3) .social-icon-huge { animation-delay: -2s; }
+        .social-card:nth-child(4) .social-icon-huge { animation-delay: -3s; }
+        .social-card:nth-child(5) .social-icon-huge { animation-delay: -4s; }
+        .page:not(.active) .social-icon-huge, .page:not(.active) .home-deco i { animation-play-state: paused; }
+
+        /* Reveal saat scroll (JS: checkReveal) — transisi, bukan keyframe, supaya ringan */
+        .sr { opacity: 0; translate: 0 50px; scale: .94; }
+        .sr-side { translate: -36px 0; scale: 1; }
+        .sr.in { opacity: 1; translate: 0 0; scale: 1; transition: opacity 0.9s var(--ease-out) var(--d, 0ms), translate 1.2s var(--ease-soft-spring) var(--d, 0ms), scale 1.2s var(--ease-soft-spring) var(--d, 0ms); }
+
+        /* Dekorasi Home: dua cincin berputar pelan + satu titik orbit */
+        .home-deco { position: absolute; left: 50%; top: 50%; width: min(64vw, 80vh); aspect-ratio: 1; translate: -50% -50%; z-index: -1; pointer-events: none; }
+        .home-deco i { position: absolute; inset: 0; border-radius: 50%; border: 1px dashed rgba(26,26,26,0.14); animation: spinSlow 60s linear infinite; }
+        .home-deco i:nth-child(2) { inset: 12%; border: 1px solid rgba(0,196,181,0.28); animation: spinSlow 38s linear infinite reverse; }
+        .home-deco i:nth-child(2)::before { content: ''; position: absolute; top: -4px; left: 50%; width: 8px; height: 8px; margin-left: -4px; border-radius: 50%; background: var(--accent-cyan); box-shadow: 0 0 0 5px rgba(0,196,181,0.18); }
+
+        /* Nav masuk dari atas */
+        .nav-container { animation: navDrop 1.3s var(--ease-spring) 0.15s backwards; }
+
+        body.is-scrolling .floating-square { animation-play-state: paused; } /* hemat saat scroll */
+
+        /* Magnetic (translate dipakai JS; transform tetap untuk hover) */
+        .mag { transition: transform 0.6s var(--ease-out), translate 0.5s var(--ease-soft-spring), box-shadow 0.6s var(--ease-out), background-color 0.35s ease, color 0.5s var(--ease-out), opacity 0.4s ease; }
+
+        /* Tilt 3D + pantulan cahaya (transform diatur JS; transisi transform dimatikan agar tidak "menyeret") */
+        html.js-tilt .tilt, html.js-tilt :is(.project-card-v, .project-card-h) { transition-property: box-shadow, background-color, outline-color, opacity, color; }
+        .tilt::after { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 3; opacity: 0; transition: opacity 0.6s var(--ease-out);
+            background: radial-gradient(320px circle at var(--mx, 50%) var(--my, 30%), var(--glare, rgba(0,196,181,0.10)), rgba(0,196,181,0) 70%); }
+        .tilt:hover::after { opacity: 1; }
+        .social-card-main.tilt { --glare: rgba(255,255,255,0.16); }
+
+        /* Kilau pada tombol */
+        .btn-cyan::after { content: ''; position: absolute; inset: 0; pointer-events: none; translate: -120% 0; background: linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.35) 50%, transparent 70%); transition: translate 0.9s var(--ease-out); }
+        .btn-cyan:hover::after { translate: 120% 0; }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; animation-delay: 0s !important; transition-duration: 0.01ms !important; transition-delay: 0s !important; }
+            .sr { opacity: 1; translate: none; scale: none; }
+        }
+    
+        /* =========================================
+           RESPONSIVE LAYER
+           Desktop (>1279px) tetap identik. Di bawahnya layout disusun ulang, bukan sekadar dikecilkan:
+           ≤1279 laptop kecil · ≤1100 tablet · ≤700 ponsel (nav pindah ke bawah) · landscape pendek
+           ========================================= */
+        :root { --safe-t: env(safe-area-inset-top, 0px); --safe-b: env(safe-area-inset-bottom, 0px); --pad: 40px; }
+        html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; overscroll-behavior: none; }
+        body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent; }
+        @supports (height: 100dvh) { body, #fixed-grid-bg, #scene, .page { height: 100dvh; } }
+        .page { overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+        .page-content { padding-left: max(var(--pad), env(safe-area-inset-left, 0px)); padding-right: max(var(--pad), env(safe-area-inset-right, 0px)); }
+        @keyframes navRise { from { opacity: 0; translate: 0 70px; scale: .92; } to { opacity: 1; translate: 0 0; scale: 1; } }
+
+        /* Pengganti inline style (nilai desktop identik, tapi bisa di-override per breakpoint) */
+        #home { justify-content: flex-start; }
+        #home .page-content { margin-block: auto; } /* center yang aman: konten tidak pernah terpotong di atas */
+        #home h1:first-of-type { font-size: clamp(30px, 9.4vw, 85px); }
+        #home h1:nth-of-type(2) { font-size: clamp(28px, 8.6vw, 80px); }
+        #about .page-content { height: 100%; }
+        .detail-text { width: 60%; }
+        .detail-h2 { font-size: 35px; margin-bottom: 20px; }
+        .detail-link { display: inline-block; padding: 6px 0; cursor: pointer; }
+        .review-wrap { display: flex; flex-direction: column; justify-content: center; height: 100%; }
+        .gallery-title { font-size: min(5.5vw, 105px); line-height: 0.95; margin-bottom: 20px; }
+        .gallery-sub { font-size: 20px; max-width: 400px; }
+        .gallery-hero-art.hero-art-main { width: auto; height: 600px; bottom: -220px; transform: translateX(300px); }
+
+        /* Monitor besar: teks vw berhenti membesar saat container (max 1280px) sudah tidak ikut melebar */
+        .about-title { font-size: min(4.2vw, 80px); }
+        .social-title { font-size: min(4.5vw, 86px); }
+        .massive-text, .massive-outline { font-size: min(16vw, 232px); }
+
+        /* ---------- Laptop kecil ---------- */
+        @media (max-width: 1279px) {
+            .skill-list-mini { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 14px; }
+            .skill-item-mini > div { min-width: 0; flex: 1; }
+            .skill-item-mini img { flex-shrink: 0; }
+            .skill-item-mini .bar-bg { width: 100%; }
+        }
+
+        /* ---------- Tablet ---------- */
+        @media (max-width: 1100px) {
+            :root { --pad: 32px; }
+            nav { padding: 16px; }
+            .nav-container { gap: 8px; padding: 8px 20px; }
+            .nav-item { font-size: 15px; padding: 9px 20px; }
+            .page { padding: 100px 0 56px; }
+            .nav-back { min-height: 44px; margin-bottom: 24px; }
+            .home-deco { width: min(88vw, 62dvh); }
+
+            /* About: foto keluar dari posisi absolut, jadi hero di atas; dua kolom tetap */
+            #about { justify-content: flex-start; }
+            #about .page-content { height: auto; }
+            .profile-img-main { position: relative; right: auto; bottom: auto; order: -1; z-index: 1; align-self: center; height: min(40dvh, 440px); max-width: 76%; margin: 0 0 -28px; filter: drop-shadow(0 18px 22px rgba(0,0,0,0.16)); }
+            .about-grid { width: 100%; gap: 26px; }
+            .about-grid > div:last-child { display: flex; flex-direction: column; }
+            .about-title { font-size: clamp(30px, 5.2vw, 44px); margin-bottom: 22px; }
+            .social-card-main, .skills-card-main { padding: 26px; border-radius: 34px; }
+            .about-me-card { height: auto; flex: 1; min-height: 340px; padding: 30px 28px 170px; border-radius: 34px; }
+            .about-wave-bg { height: 190px; }
+
+            /* Skills: tiga kartu sejajar, panah dekoratif disembunyikan */
+            .skills-carousel { gap: 18px; margin-top: 34px; }
+            .carousel-arrow { display: none; }
+            .skill-large-card { width: auto; flex: 1 1 0; min-width: 0; padding: 18px 14px; }
+            .skill-large-card::before { width: 150px; height: 150px; }
+            .skill-icon-huge { width: clamp(96px, 16vw, 130px); margin-bottom: 22px; }
+            .skill-large-card h3 { font-size: clamp(22px, 3.4vw, 28px); }
+            .skill-large-card p { font-size: 13px; min-height: 0; }
+
+            /* About me detail: lanyard tetap di kanan, lebih kecil */
+            .about-detail-card { padding: 38px 32px; border-radius: 36px; margin-top: 40px; }
+            .lanyard-img { width: clamp(240px, 36vw, 380px); right: -8px; top: -56px; }
+            .detail-text { width: 58%; }
+            .detail-h2 { font-size: 30px; }
+            .timeline-grid { gap: 32px; margin-top: 36px; }
+
+            /* Social: 3 + 2 kartu, baris terakhir di tengah */
+            .social-title { font-size: clamp(32px, 6.4vw, 54px); margin-bottom: 34px; }
+            .social-track { flex-wrap: wrap; gap: 18px; }
+            .social-card { flex: 0 0 calc((100% - 36px) / 3); width: auto; min-width: 0; }
+
+            /* Gallery: track fluid (swipe + snap), tombol pindah ke bawah track */
+            .gallery-title { font-size: clamp(36px, 6.6vw, 60px); }
+            .gallery-sub { font-size: 17px; }
+            .gallery-hero-art.hero-art-main { height: clamp(260px, 38vw, 380px); right: -2vw; bottom: -70px; transform: none; }
+            .gallery-middle { display: flex; flex-direction: column; padding: 56px 0 24px; margin-bottom: 14px; }
+            .project-track { margin: -16px calc(var(--pad) * -1) -1px; padding: 16px var(--pad) 30px; scroll-padding-inline: var(--pad); }
+            .gallery-nav-wrap { position: static; transform: none; order: 2; align-self: flex-end; margin-top: 6px; }
+            .gallery-nav { width: 44px; height: 44px; }
+            .gallery-grid-h { grid-template-columns: repeat(2, 1fr); gap: 18px; padding-bottom: 20px; }
+
+            /* Review */
+            .review-header { gap: 24px; }
+            .review-header h3 { font-size: clamp(16px, 2.4vw, 22px); }
+        }
+
+        /* ---------- Ponsel ---------- */
+        @media (max-width: 700px) {
+            :root { --pad: 20px; --nav-bg: rgba(246, 246, 246, 0.94); }
+
+            /* Navigasi di bawah: terjangkau satu tangan, memenuhi lebar layar */
+            nav { top: auto; bottom: 0; padding: 0 14px calc(12px + var(--safe-b)); }
+            .nav-container { width: 100%; max-width: 400px; gap: 2px; padding: 5px; border-radius: 32px; box-shadow: 0 12px 32px rgba(0,0,0,0.16), 0 0 0 1px rgba(0,0,0,0.05); animation-name: navRise; }
+            .nav-item { flex: 1; text-align: center; font-size: 14px; padding: 13px 4px; border-radius: 26px; }
+            .nav-indicator { border-radius: 26px; }
+            body.kb-open nav { opacity: 0; visibility: hidden; }
+
+            .page { padding: calc(var(--safe-t) + 26px) 0 calc(var(--safe-b) + 108px); }
+            .nav-back { font-size: 18px; margin-bottom: 20px; padding: 4px 16px 4px 4px; min-height: 46px; }
+            .nav-back span { padding: 6px 11px; }
+
+            /* Home */
+            .home-deco { width: min(96vw, 64dvh); }
+            .home-tag { font-size: 13px; padding: 6px 14px; top: 16px; margin-bottom: 18px; }
+            #home p { font-size: 14px; line-height: 1.6; max-width: 30ch; }
+            #home p br { display: none; }
+            #home .page-content > img { margin-top: 40px !important; width: 34px !important; }
+
+            /* About: satu kolom, foto jadi hero yang "muncul" dari balik kartu */
+            .profile-img-main { height: min(36dvh, 340px); max-width: 84%; margin-bottom: -22px; }
+            .about-grid { grid-template-columns: 1fr; gap: 0; }
+            .about-grid > div:last-child { display: block; }
+            .about-title { font-size: clamp(28px, 9vw, 40px); margin-bottom: 18px; }
+            .about-grid > div:last-child .about-title { margin-top: 30px; }
+            .social-card-main { padding: 22px 24px; border-radius: 30px; margin-bottom: 14px; min-height: 68px; }
+            .social-card-main h3, .skills-card-main h3 { font-size: 18px; }
+            .skills-card-main { padding: 24px 22px 30px; border-radius: 30px; }
+            .skills-card-main h3 { padding-right: 44px; margin-bottom: 20px; }
+            .skills-wave-bg { height: 150px; }
+            .about-me-card { min-height: 0; padding: 26px 24px 160px; border-radius: 30px; }
+            .about-me-card h3 { font-size: 22px; }
+            .about-wave-bg { height: 170px; }
+
+            /* Skills: carousel swipe dengan snap, kartu berikutnya mengintip */
+            .skills-carousel { justify-content: flex-start; gap: 14px; margin: 22px calc(var(--pad) * -1) 0; padding: 8px var(--pad) 30px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: var(--pad); scrollbar-width: none; }
+            .skills-carousel::-webkit-scrollbar { display: none; }
+            .skill-large-card { flex: 0 0 min(74vw, 300px); scroll-snap-align: start; }
+            .skill-icon-huge { width: 118px; }
+            .skill-large-card::before { width: 140px; height: 140px; }
+            .skill-large-card p { font-size: 14px; }
+
+            /* About me detail: kartu ID menggantung dari atas kartu */
+            .about-detail-card { margin-top: 70px; padding: 8px 20px 28px; border-radius: 30px; }
+            .lanyard-img { position: relative; right: auto; top: auto; display: block; width: min(60vw, 240px); margin: -62px auto 6px; }
+            .detail-text { width: 100%; }
+            .detail-h2 { font-size: 28px; margin-bottom: 14px; }
+            .timeline-grid { grid-template-columns: 1fr; gap: 30px; margin-top: 32px; }
+            .timeline-list { padding-left: 24px; }
+            .timeline-list li::before { left: -31px; }
+
+            /* Social: swipe horizontal, bar bawah menjadi indikator posisi */
+            .social-title { font-size: clamp(28px, 9vw, 42px); margin-bottom: 26px; }
+            .social-track { justify-content: flex-start; flex-wrap: nowrap; gap: 14px; margin: 0 calc(var(--pad) * -1) 14px; padding: 14px var(--pad) 28px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: var(--pad); scrollbar-width: none; }
+            .social-track::-webkit-scrollbar { display: none; }
+            .social-card { flex: 0 0 min(64vw, 240px); height: 300px; scroll-snap-align: start; }
+
+            /* Gallery */
+            .gallery-header { flex-direction: column; }
+            .gallery-header > div { align-self: stretch; }
+            .gallery-title { font-size: clamp(34px, 10.4vw, 46px); margin-bottom: 14px; }
+            .gallery-sub { font-size: 15px; max-width: 32ch; }
+            .search-wrap { margin-top: 22px; gap: 10px; }
+            .search-box { flex: 1; width: auto; min-width: 0; padding: 0 18px; min-height: 48px; }
+            .btn-cyan { padding: 0 26px; min-height: 48px; }
+            .gallery-hero-art.hero-art-main { position: relative; order: 2; align-self: flex-end; right: auto; bottom: auto; height: min(28dvh, 230px); margin: 14px -6px -36px 0; }
+            .gallery-middle { padding: 40px 0 18px; }
+            .project-card-v { width: clamp(224px, 68vw, 290px); height: auto; aspect-ratio: 13 / 18; }
+            .project-info { padding: 18px; }
+            .project-info h4 { font-size: 23px; }
+            .project-card-h .project-info h4 { font-size: 20px; }
+            .project-info::after { top: 20px; right: 18px; }
+            .project-tag { top: 15px; left: 15px; }
+            .gallery-grid-h { grid-template-columns: 1fr; gap: 16px; }
+            .project-card-h { height: auto; aspect-ratio: 16 / 10.5; }
+
+            /* Review: ditumpuk di tengah */
+            .review-wrap { height: auto; min-height: 100%; }
+            .review-header { flex-direction: column; gap: 14px; margin-bottom: 34px; }
+            .review-header h3, .review-header h3.right { flex: none; text-align: center; font-size: 18px; }
+            .massive-text, .massive-outline { font-size: 17vw; line-height: 0.8; }
+            .massive-outline { -webkit-text-stroke-width: 1.5px; }
+        }
+
+        /* ---------- Landscape pendek (ponsel diputar) ---------- */
+        @media (max-height: 520px) and (orientation: landscape) {
+            :root { --pad: 28px; }
+            nav { top: 0; bottom: auto; padding: 8px; }
+            .nav-container { width: auto; max-width: none; padding: 5px 14px; animation-name: navDrop; }
+            .nav-item { flex: none; font-size: 14px; padding: 7px 16px; }
+            .page { padding: 66px 0 24px; }
+            #home h1:first-of-type { font-size: min(9.4vw, 15vh); }
+            #home h1:nth-of-type(2) { font-size: min(8.6vw, 13vh); }
+            .home-tag { top: 8px; margin-bottom: 10px; font-size: 13px; }
+            #home p { font-size: 12px; }
+            #home .page-content > img { margin-top: 16px !important; }
+            .profile-img-main { height: 58dvh; }
+            .massive-text, .massive-outline { font-size: min(16vw, 26vh); }
+            .review-header { margin-bottom: 20px; }
+        }
+
+        /* ---------- Layar sentuh: hover tidak boleh "menempel" setelah tap ---------- */
+        @media (hover: none) {
+            .card:hover { transform: none; box-shadow: 0 10px 40px rgba(0,0,0,0.06); }
+            .social-card:hover { transform: none; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+            .social-card:hover .social-icon-huge { transform: translateX(-50%); }
+            .nav-item:hover:not(.active) { background: none; }
+            .btn-cyan:hover { transform: none; box-shadow: none; }
+            :is(.project-card-v, .project-card-h):hover::before { transform: scale(1); }
+            :is(.project-card-v, .project-card-h):hover::after { opacity: 0; }
+            :is(.project-card-v, .project-card-h):hover .project-info :is(h4, p) { transform: none; }
+            :is(.project-card-v, .project-card-h):hover .project-link-arrow { transform: none; background: rgba(24,24,24,0.34); border-color: rgba(255,255,255,0.34); box-shadow: none; }
+        }
+
+        /* =========================================
+           REFINEMENT (hasil preview mobile)
+           ========================================= */
+        .skills-ctl { display: none; }
+        .sk-btn { width: 44px; height: 44px; padding: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; background: #1a1a1a; border: 1px solid rgba(255,255,255,0.28); box-shadow: 0 6px 16px -6px rgba(0,0,0,0.45); cursor: pointer; transition: transform 0.3s var(--ease-out), opacity 0.3s ease; }
+        .sk-btn svg { width: 16px; height: 16px; }
+        .sk-btn:active:not(:disabled) { transform: scale(0.92); }
+        .sk-btn:disabled { opacity: 0.3; cursor: default; }
+
+        @media (max-width: 1100px) {
+            /* Home: ritme vertikal konsisten, konten tepat di tengah layar (padding atas = bawah) */
+            #home { padding-block: max(96px, calc(var(--safe-t) + 80px)); }
+            .home-tag { top: 0; margin-bottom: 22px; }
+            #home h1 { margin-bottom: 0; line-height: 1.08; }
+            #home h1:nth-of-type(2) { margin-top: 8px; transform: none !important; }
+            #home p { margin-top: 26px; line-height: 1.65; text-wrap: balance; }
+            #home .page-content > img { margin-top: 44px !important; }
+
+            /* Skills: ikon seragam (kotak tetap, rasio terjaga), lingkaran pas di belakang ikon, carousel di tengah halaman */
+            #skills .page-content { display: flex; flex-direction: column; min-height: 100%; }
+            #skills .nav-back { align-self: flex-start; }
+            .skills-carousel { margin-block: auto; }
+            .skill-large-card { --ic: clamp(96px, 16vw, 130px); padding: 20px 14px 18px; }
+            .skill-icon-huge { width: var(--ic); height: var(--ic); object-fit: contain; }
+            .skill-large-card::before { width: calc(var(--ic) + 30px); height: calc(var(--ic) + 30px); }
+
+            /* Gallery: Guin menempel di sudut kanan header, tidak menutupi judul */
+            .gallery-hero-art.hero-art-main { height: clamp(300px, 42vw, 440px); max-width: 48vw; right: 0; bottom: -50px; object-fit: contain; object-position: right bottom; }
+            .gallery-title { position: relative; z-index: 1; }
+        }
+
+        @media (max-width: 700px) {
+            #home { padding-block: calc(86px + max(var(--safe-t), var(--safe-b))); }
+            .home-tag { margin-bottom: 20px; }
+            #home h1:nth-of-type(2) { margin-top: 6px; }
+            #home p { margin-top: 22px; font-size: 13.5px; max-width: 100%; padding-inline: 6px; }
+            #home .page-content > img { margin-top: 34px !important; }
+
+            /* About: foto jadi hero di kanan, judul di kiri, kartu menumpuk menutupi kaki foto */
+            #about { --hero-h: clamp(300px, 92vw, 390px); }
+            .profile-img-main { position: absolute; top: calc(var(--safe-t) + 26px); right: 0; bottom: auto; order: 0; align-self: auto; height: var(--hero-h); max-width: 66vw; margin: 0; object-position: right bottom; }
+            .about-grid > div:first-child .about-title { max-width: 56%; min-height: calc(var(--hero-h) - 34px); }
+
+            /* Skills: kartu selalu di tengah (snap center), tombol + dot sebagai navigasi */
+            .skill-large-card { --ic: 120px; }
+            .skills-carousel { --cw: min(74vw, 300px); gap: 16px; justify-content: flex-start; margin: auto calc(var(--pad) * -1) 0; padding: 14px 0 44px; scroll-snap-type: x mandatory; scroll-padding-inline: 0; overscroll-behavior-x: contain; }
+            .skills-carousel::before, .skills-carousel::after { content: ''; flex: 0 0 calc((100vw - var(--cw)) / 2 - 16px); }
+            .skill-large-card { flex: 0 0 var(--cw); scroll-snap-align: center; scroll-snap-stop: always; }
+            .skills-ctl { display: flex; align-items: center; justify-content: center; gap: 18px; margin: 0 auto auto; }
+            .skills-dots { display: flex; align-items: center; gap: 8px; }
+            .skills-dots i { width: 8px; height: 8px; border-radius: 8px; background: #cfcfcf; transition: width 0.4s var(--ease-out), background-color 0.3s ease; }
+            .skills-dots i.on { width: 24px; background: var(--accent-cyan); }
+
+            /* Social: grup judul + kartu + bar berada di tengah ruang tersisa */
+            #social .page-content { display: flex; flex-direction: column; min-height: 100%; }
+            #social .nav-back { align-self: flex-start; }
+            .social-title { margin-top: auto; font-size: clamp(26px, 8vw, 38px); }
+            .social-progress { margin-bottom: auto !important; }
+            .social-card p { font-size: 11px; }
+
+            /* Gallery: judul penuh, subjudul + Guin berdampingan, lalu search */
+            .gallery-header { display: grid; grid-template-columns: minmax(0, 1fr) 40%; column-gap: 12px; align-items: start; }
+            .gallery-header > div { display: contents; }
+            .gallery-title { grid-column: 1 / -1; grid-row: 1; font-size: clamp(32px, 9.4vw, 44px); }
+            .gallery-sub { grid-column: 1; grid-row: 2; align-self: center; max-width: none; }
+            .search-wrap { grid-column: 1 / -1; grid-row: 3; }
+            .gallery-hero-art.hero-art-main { grid-column: 2; grid-row: 2; align-self: end; justify-self: end; position: relative; order: 0; right: auto; bottom: auto; width: 100%; max-width: none; height: 172px; margin: -94px -12px 0 0; transform: none; }
+        }
+
+        /* Mobile & tablet: foto About dan Guin Gallery disembunyikan (desktop tetap tampil) */
+        @media (max-width: 1100px) {
+            .profile-img-main, .gallery-hero-art { display: none; }
+        }
+        @media (max-width: 700px) {
+            .about-grid > div:first-child .about-title { max-width: none; min-height: 0; }
+            .gallery-sub { grid-column: 1 / -1; }
+        }
+
+        /* Tablet: isi About berada di tengah layar */
+        @media (min-width: 701px) and (max-width: 1100px) {
+            #about { padding-block: 100px; }
+            #about .page-content { margin-block: auto; }
+            .about-grid { max-width: 860px; margin-inline: auto; }
+        }
+        /* Ponsel: judul Gallery sedikit lebih besar */
+        @media (max-width: 700px) {
+            .gallery-title { font-size: clamp(36px, 11vw, 50px); }
+        }
+
+        /* Ponsel: Social bisa di-swipe (alur blok biasa, tanpa flex-column), card About me = card Software Skills */
+        @media (max-width: 1100px) {
+            .social-track, .skills-carousel, .project-track { -webkit-user-select: none; user-select: none; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; }
+            .social-track img, .skills-carousel img { -webkit-user-drag: none; }
+        }
+        @media (max-width: 700px) {
+            #social .page-content { display: block; min-height: 0; }
+            .social-title { margin-top: min(8dvh, 64px); }
+            .social-progress { margin-bottom: 0 !important; }
+            .social-track { flex: none; width: auto; touch-action: pan-x pan-y; }
+
+            .about-me-card { padding: 24px 22px 30px; }
+            .about-me-card h3 { font-size: 18px; margin-bottom: 20px; padding-right: 44px; position: relative; z-index: 2; }
+            .about-me-card p { position: relative; z-index: 2; font-size: 14px; }
+            .about-wave-bg { height: 150px; }
+        }
+
+        /* Fix hentakan saat hover: kartu yang digerakkan JS (tilt) tidak boleh ikut dikenai transform hover/active CSS,
+           karena CSS itu langsung loncat (tanpa transisi) sebelum JS sempat mengambil alih. */
+        html.js-tilt .tilt:hover, html.js-tilt .tilt:active,
+        html.js-tilt :is(.project-card-v, .project-card-h):active { transform: none; }
+
+        /* Fix elemen About "bergeser" saat hover: efek tilt/lift membuat tinggi konten sesaat melewati tinggi layar,
+           scrollbar vertikal muncul-hilang dan seluruh isi halaman ikut bergeser. Ruang scrollbar kini selalu dicadangkan. */
+        .page { scrollbar-gutter: stable both-edges; }
+    </style>
+</head>
+<body>
+
+    <!-- REVISI GLOBAL GRID: Berada di paling belakang -->
+    <div id="fixed-grid-bg"></div>
+
+    <nav>
+        <div class="nav-container">
+            <span class="nav-indicator"></span>
+            <div class="nav-item active" onclick="goToPage(0)">Home</div>
+            <div class="nav-item" onclick="goToPage(1)">About</div>
+            <div class="nav-item" onclick="goToPage(5)">Gallery</div>
+            <div class="nav-item" onclick="goToPage(6)">Review</div>
+        </div>
+    </nav>
+
+    <!-- Parallax Squares Container -->
+    <div id="parallax-container"></div>
+
+    <main id="scene">
+        
+        <!-- SLIDE 1: Home -->
+        <section class="page active" id="home">
+            <div class="page-bg"></div>
+            <div class="page-content" style="display: flex; flex-direction: column; align-items: center; text-align: center;">
+                <div class="home-deco" aria-hidden="true"><i></i><i></i></div>
+                <div class="home-tag">Artwork Gallery</div>
+                <h1 class="syne" style="font-family: Benzin; font-weight: 100;">Welcome to</h1>
+                <h1 style="font-family: Benzin-T; font-weight: 100; transform: translateY(-20px);">My Portofolio</h1>
+                <p style="font-family: Benzin-T; color: #292929;" >A collection of my creative journey, documenting the ideas, <br> experiments, and moments that shape my perspective.</p>
+                <img decoding="async" src="assets/common/logo.png" alt="PD Logo" style="margin-top: 70px; width: 40px;">
+            </div>
+        </section>
+
+        <!-- SLIDE 2: About Main -->
+        <section class="page" id="about">
+            <div class="page-bg"></div>
+            <div class="page-content">
+                <div class="about-grid">
+                    <!-- Kiri -->
+                    <div>
+                        <!-- Dipertahankan: Font Editan Anda -->
+                        <h2 class="syne about-title" style="font-family: Coolvetica; letter-spacing: 1px; font-weight: 100;">i'm Pradhita I'm a Graphic <span>Designer</span></h2>
+                        
+                        <div class="social-card-main card" onclick="goToPage(4)">
+                            <h3 style="font-family: Coolvetica; font-weight: 100;">Social Media</h3>
+                            <div class="link-icon">🔗</div>
+                        </div>
+
+                        <div class="skills-card-main card" onclick="goToPage(2)">
+                            <h3 style="font-family: Coolvetica; letter-spacing: 1px; font-weight: 100;">Software Skills Infomation</h3>
+                            <div class="arrow-icon-dark">↗</div>
+                            <div class="skill-list-mini">
+                                <div class="skill-item-mini"><img decoding="async" src="assets/skills/ps-icon.png"><div><p style="font-size:12px; font-weight:600;">Photoshop</p><div class="bar-bg"><div class="bar-fill" style="width:70%;"></div></div></div></div>
+                                <div class="skill-item-mini"><img decoding="async" src="assets/skills/alight-icon.png"><div><p style="font-size:12px; font-weight:600;">Alight Motion</p><div class="bar-bg"><div class="bar-fill" style="width:50%;"></div></div></div></div>
+                                <div class="skill-item-mini"><img decoding="async" src="assets/skills/ai-icon.png"><div><p style="font-size:12px; font-weight:600;">Ilustrator</p><div class="bar-bg"><div class="bar-fill" style="width:30%;"></div></div></div></div>
+                                <div class="skill-item-mini"><img decoding="async" src="assets/skills/figma-icon.png"><div><p style="font-size:12px; font-weight:600; color: white;">Figma</p><div class="bar-bg"><div class="bar-fill" style="width:40%;"></div></div></div></div>
+                            </div>
+                                <div class="skills-wave-bg"></div>
+                        </div>
+                    </div>
+                    <!-- Kanan -->
+                    <div>
+                        <!-- Dipertahankan: Font Editan Anda -->
+                        <h2 class="syne about-title" style="font-family: Coolvetica; letter-spacing: 1px; font-weight: 100;">Getting to know me <span>Better</span></h2>
+                        <div class="about-me-card card" onclick="goToPage(3)">
+                            <h3 style="font-family: Coolvetica; font-weight: 100;">About me</h3>
+                            <p style="font-family: Poppins; line-height: 1.2;">I'm an <strong>Informatics Engineering student</strong> passionate about <strong>UI/UX design, web development, and AI.</strong> I love turning creative ideas into meaningful digital experiences.</p>
+                            <div class="arrow-icon-dark">↗</div>
+                            <div class="about-wave-bg"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <img decoding="async" src="assets/about/profile-cutout.png" class="profile-img-main" alt="Pradhita">
+        </section>
+
+        <!-- SLIDE 3: Software Skills -->
+        <section class="page" id="skills">
+            <div class="page-bg"></div>
+            <div class="page-content">
+                <div class="nav-back" onclick="goToPage(1)"><span>❮</span> Software Skills</div>
+                <div class="skills-carousel">
+                    <div class="carousel-arrow prev" style="font-size:30px; font-weight:bold; cursor:pointer;">❮</div>
+                    
+                    <div class="skill-large-card card">
+                        <img decoding="async" src="assets/skills/ai-icon.png" class="skill-icon-huge">
+                        <h3 class="syne" style="font-family: Coolvetica; font-weight: 100; letter-spacing: 1px;">Ilustrator</h3>
+                        <p style="font-family: Poppins;" >Beginner — Learning to create vector graphics, illustrations, and clean visual designs.</p>
+                        <div class="progress-track"><div class="progress-fill" style="width:30%;"></div></div>
+                    </div>
+                    <div class="skill-large-card card">
+                        <img decoding="async" src="assets/skills/ps-icon.png" class="skill-icon-huge">
+                        <h3 class="syne" style="font-family: Coolvetica; font-weight: 100; letter-spacing: 1px;">Photoshop</h3>
+                        <p style="font-family: Poppins;">Intermediate — Skilled in photo manipulation, visual composition creating compelling digital artwork.</p>
+                        <div class="progress-track"><div class="progress-fill" style="width:70%;"></div></div>
+                    </div>
+                    <div class="skill-large-card card">
+                        <img decoding="async" src="assets/skills/figma-icon.png" class="skill-icon-huge">
+                        <h3 class="syne" style="font-family: Coolvetica; font-weight: 100; letter-spacing: 1px;">Figma</h3>
+                        <p style="font-family: Poppins;">Beginner — Exploring UI/UX design, wireframing, and interactive prototyping.</p>
+                        <div class="progress-track"><div class="progress-fill" style="width:40%;"></div></div>
+                    </div>
+
+                    <div class="carousel-arrow next" style="font-size:30px; font-weight:bold; cursor:pointer;">❯</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 4: About Me Detail -->
+        <section class="page" id="about-detail">
+            <div class="page-bg"></div>
+            <div class="page-content">
+                <div class="nav-back" onclick="goToPage(1)"><span>❮</span> About me</div>
+                
+                <div class="about-detail-card">
+                    <img decoding="async" src="assets/about/smart-card-lanyard.png" class="lanyard-img">
+                    
+                    <div class="detail-text">
+                        <h2 class="syne detail-h2">Behind the Visuals</h2>
+                        <p style="color: var(--text-muted); line-height: 1.6; margin-bottom: 20px; font-family: Poppins;">I'm Azhar Raafi Pradhita, an Informatics student with a strong interest in UI/UX design, graphic design, web development, and artificial intelligence.</p>
+                        <p style="color: var(--text-muted); line-height: 1.6; margin-bottom: 30px; font-family: Poppins;">I enjoy combining creativity and technology to create engaging digital experiences while continuously learning and developing my skills.</p>
+                        
+                        <h3 class="syne detail-link" style="font-size: 22px; margin-bottom: 10px;" onclick="goToPage(2)">Software ↗</h3>
+                        <div style="display:flex; gap:10px; margin-bottom:30px;">
+                            <img decoding="async" src="assets/skills/ps-icon.png" width="35"><img decoding="async" src="assets/skills/ai-icon.png" width="35"><img decoding="async" src="assets/skills/alight-icon.png" width="35"><img decoding="async" src="assets/skills/figma-icon.png" width="35">
+                        </div>
+
+                        <h3 class="syne" style="font-size: 22px; margin-bottom: 10px;">Skills</h3>
+                        <div class="tags-container">
+                            <div class="tag-outline">UI/UX</div><div class="tag-outline">Teamwork</div><div class="tag-outline">Motion Graphic</div><div class="tag-outline">Fullstack Developer</div><div class="tag-outline">Time Management</div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-grid">
+                        <div>
+                            <h3 class="syne" style="font-size: 28px;">Education</h3>
+                            <ul class="timeline-list">
+                                <li><div class="timeline-year">2014</div>Sekolah Dasar<br><span style="color:var(--text-muted); font-size:14px;">SDN Nagarasari</span></li>
+                                <li><div class="timeline-year">2020</div>Sekolah Menengah Pertama<br><span style="color:var(--text-muted); font-size:14px;">SMPN 1 Sukaluyu</span></li>
+                                <li><div class="timeline-year">2023</div>Sekolah Menengah Kejuruan<br><span style="color:var(--text-muted); font-size:14px;">SMKN 1 Sukaluyu</span></li>
+                                <li><div class="timeline-year">2026</div>Perguruan Tinggi<br><span style="color:var(--text-muted); font-size:14px;">Universitas Komputer Indonesia</span></li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h3 class="syne" style="font-size: 28px;">Experience</h3>
+                            <ul class="timeline-list">
+                                <li><div class="timeline-year">0000</div>None<br><span style="color:var(--text-muted); font-size:14px;">Lorem ipsum dolor sit amet...</span></li>
+                                <li><div class="timeline-year">0000</div>None<br><span style="color:var(--text-muted); font-size:14px;">Lorem ipsum dolor sit amet...</span></li>
+                                <li><div class="timeline-year">0000</div>None<br><span style="color:var(--text-muted); font-size:14px;">Lorem ipsum dolor sit amet...</span></li>
+                                <li><div class="timeline-year">0000</div>None<br><span style="color:var(--text-muted); font-size:14px;">Lorem ipsum dolor sit amet...</span></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 5: Social Media -->
+        <section class="page" id="social">
+            <div class="page-bg"></div>
+            <div class="page-content">
+                <div class="nav-back" onclick="goToPage(1)"><span>❮</span> Social Media</div>
+                <h1 class="syne social-title" style="font-family: Coolvetica; letter-spacing: 1px; font-weight: 100;">Lets stay connected!<br>Explore my Profiles</h1>
+                
+                <div class="social-track">
+                    <div class="social-card">
+                        <div class="social-card-header"><span>Instagram</span><span>Portofolio</span></div>
+                        <h3 class="syne" style="font-family: Coolvetica; font-weight: 100; letter-spacing: 1px;" >Explore<br>Instagram</h3>
+                        <p>https://www.instagram.com/pradhx/</p>
+                        <div class="social-wave-bg"></div>
+                        <img decoding="async" src="assets/social/ig-icon.png" class="social-icon-huge">
+                    </div>
+                    <div class="social-card">
+                        <div class="social-card-header"><span>Github</span><span>Personal</span></div>
+                        <h3 class="syne" style="font-family: Coolvetica; font-weight: 100; letter-spacing: 1px;" >Explore<br>Github</h3>
+                        <p>https://github.com/pradhita</p>
+                        <div class="social-wave-bg"></div>
+                        <img decoding="async" src="assets/social/github-icon.png" class="social-icon-huge">
+                    </div>
+                    <div class="social-card">
+                        <div class="social-card-header"><span>Pinterest</span><span>Personal</span></div>
+                        <h3 class="syne" style="font-family: Coolvetica; font-weight: 100; letter-spacing: 1px;" >Explore<br>Pinterest</h3>
+                        <p>https://id.pinterest.com/pradhita1010/</p>
+                        <div class="social-wave-bg"></div>
+                        <img decoding="async" src="assets/social/pin-icon.png" class="social-icon-huge">
+                    </div>
+                    <div class="social-card">
+                        <div class="social-card-header"><span>X</span><span>Personal</span></div>
+                        <h3 class="syne" style="font-family: Coolvetica; font-weight: 100; letter-spacing: 1px;" >Explore<br>X</h3>
+                        <p>https://x.com/pradhita</p>
+                        <div class="social-wave-bg"></div>
+                        <img decoding="async" src="assets/social/x-icon.png" class="social-icon-huge">
+                    </div>
+                    <div class="social-card">
+                        <div class="social-card-header"><span>Facebook</span><span>Personal</span></div>
+                        <h3 class="syne" style="font-family: Coolvetica; font-weight: 100; letter-spacing: 1px;" >Explore<br>Facebook</h3>
+                        <p>https://facebook.com/pradhita</p>
+                        <div class="social-wave-bg"></div>
+                        <img decoding="async" src="assets/social/fb-icon.png" class="social-icon-huge">
+                    </div>
+                </div>
+                <!-- Custom Scrollbar bawah visual sesuai PPT -->
+                <div class="social-progress" style="width:80%; height:8px; background:#e0e0e0; border-radius:10px; margin: 0 auto;">
+                    <div style="width:30%; height:100%; background:#444; border-radius:10px;"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 6: Gallery -->
+        <section class="page" id="gallery">
+            <div class="page-bg"></div>
+            <div class="page-content">
+                
+                <div class="gallery-header">
+                    <img decoding="async" src="assets/gallery/guin.png" class="gallery-hero-art hero-art-main" alt="">
+                    <div style="position: relative;">
+                        
+                        <h1 class="syne gallery-title" style="font-family: Coolvetica; letter-spacing: 1px; font-weight: 100">An Archive of<br>Creativity</h1>
+                        <p class="gallery-sub" style="color: var(--text-muted); font-family: Poppins;"> Every frame holds an idea. Every design tells a story.</p>
+                        
+                        <div class="search-wrap">
+                            <div class="search-box">
+                                <span style="margin-right: 15px;">🔍</span>
+                                <input type="text" placeholder="Search">
+                            </div>
+                            <div class="btn-cyan">More</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="gallery-middle">
+                    <img decoding="async" src="assets/gallery/wave-bg.png" class="wave-full-bg" alt="">
+                    <div class="gallery-nav-wrap">
+                        <button type="button" class="gallery-nav prev" aria-label="Scroll left" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+                        <button type="button" class="gallery-nav next" aria-label="Scroll right"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+                    </div>
+                    
+                    <div class="project-track">
+                        <div class="project-card-v" tabindex="0" style="background-image: url('assets/gallery/project-v1.png');">
+                            <div class="project-info">
+                                <div><span class="project-tag">Games</span><h4 class="syne">Pricelist Genshin</h4><p>See more...</p></div>
+                                <div class="project-link-arrow" aria-hidden="true">↗</div>
+                            </div>
+                        </div>
+                        <div class="project-card-v" tabindex="0" style="background-image: url('assets/gallery/project-v2.png');">
+                            <div class="project-info">
+                                <div><span class="project-tag">Artwork</span><h4 class="syne">Simple Design</h4><p>See more...</p></div>
+                                <div class="project-link-arrow" aria-hidden="true">↗</div>
+                            </div>
+                        </div>
+                        <div class="project-card-v" tabindex="0" style="background-image: url('assets/gallery/project-v3.png');">
+                            <div class="project-info">
+                                <div><span class="project-tag">Games</span><h4 class="syne">Pricelist MLBB</h4><p>See more...</p></div>
+                                <div class="project-link-arrow" aria-hidden="true">↗</div>
+                            </div>
+                        </div>
+                        <div class="project-card-v" tabindex="0" style="background-image: url('assets/gallery/project-v4.png');">
+                            <div class="project-info">
+                                <div><span class="project-tag">Artwork</span><h4 class="syne">Discord Server</h4><p>See more...</p></div>
+                                <div class="project-link-arrow" aria-hidden="true">↗</div>
+                            </div>
+                        </div>
+                        <div class="project-card-v" tabindex="0" style="background-image: url('assets/gallery/project-v5.png');">
+                            <div class="project-info">
+                                <div><span class="project-tag">Artwork</span><h4 class="syne">Project Name 5</h4><p>See more...</p></div>
+                                <div class="project-link-arrow" aria-hidden="true">↗</div>
+                            </div>
+                        </div>
+                        <div class="project-card-v" tabindex="0" style="background-image: url('assets/gallery/project-v6.png');">
+                            <div class="project-info">
+                                <div><span class="project-tag">Artwork</span><h4 class="syne">Project Name 6</h4><p>See more...</p></div>
+                                <div class="project-link-arrow" aria-hidden="true">↗</div>
+                            </div>
+                        </div>
+                        <div class="project-card-v" tabindex="0" style="background-image: url('assets/gallery/project-v7.png');">
+                            <div class="project-info">
+                                <div><span class="project-tag">Artwork</span><h4 class="syne">Project Name 7</h4><p>See more...</p></div>
+                                <div class="project-link-arrow" aria-hidden="true">↗</div>
+                            </div>
+                        </div>
+                        <div class="project-card-v" tabindex="0" style="background-image: url('assets/gallery/project-v8.png');">
+                            <div class="project-info">
+                                <div><span class="project-tag">Artwork</span><h4 class="syne">Project Name 8</h4><p>See more...</p></div>
+                                <div class="project-link-arrow" aria-hidden="true">↗</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="gallery-grid-h">
+                    <div class="project-card-h" tabindex="0" style="background-image: url('assets/gallery/project-h1.png');">
+                        <div class="project-info">
+                            <div><span class="project-tag">Artwork</span><h4 class="syne">Project Name H1</h4><p>See more...</p></div>
+                            <div class="project-link-arrow" aria-hidden="true">↗</div>
+                        </div>
+                    </div>
+                    <div class="project-card-h" tabindex="0" style="background-image: url('assets/gallery/project-h2.png');">
+                        <div class="project-info">
+                            <div><span class="project-tag">Artwork</span><h4 class="syne">Project Name H2</h4><p>See more...</p></div>
+                            <div class="project-link-arrow" aria-hidden="true">↗</div>
+                        </div>
+                    </div>
+                    <div class="project-card-h" tabindex="0" style="background-image: url('assets/gallery/project-h3.png');">
+                        <div class="project-info">
+                            <div><span class="project-tag">Artwork</span><h4 class="syne">Project Name H3</h4><p>See more...</p></div>
+                            <div class="project-link-arrow" aria-hidden="true">↗</div>
+                        </div>
+                    </div>
+                    <div class="project-card-h" tabindex="0" style="background-image: url('assets/gallery/project-h4.png');">
+                        <div class="project-info">
+                            <div><span class="project-tag">Artwork</span><h4 class="syne">Project Name H4</h4><p>See more...</p></div>
+                            <div class="project-link-arrow" aria-hidden="true">↗</div>
+                        </div>
+                    </div>
+                    <div class="project-card-h" tabindex="0" style="background-image: url('assets/gallery/project-h5.png');">
+                        <div class="project-info">
+                            <div><span class="project-tag">Artwork</span><h4 class="syne">Project Name H5</h4><p>See more...</p></div>
+                            <div class="project-link-arrow" aria-hidden="true">↗</div>
+                        </div>
+                    </div>
+                    <div class="project-card-h" tabindex="0" style="background-image: url('assets/gallery/project-h6.png');">
+                        <div class="project-info">
+                            <div><span class="project-tag">Artwork</span><h4 class="syne">Project Name H6</h4><p>See more...</p></div>
+                            <div class="project-link-arrow" aria-hidden="true">↗</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- SLIDE 7: Review -->
+        <section class="page" id="review">
+            <div class="page-bg"></div>
+            <div class="page-content review-wrap">
+                <div class="review-header">
+                    <h3 class="syne">Thanks for taking look at<br>my little corner of creativity</h3>
+                    <img decoding="async" src="assets/common/logo.png" alt="PD">
+                    <h3 class="syne right">Concept, Design by<br><span style="color: #1a1a1a;">Azhar Raafi Pradhita</span></h3>
+                </div>
+                <h1 class="syne massive-text">Pradhita</h1>
+                <h1 class="syne massive-outline">Pradhita</h1>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        const scene = document.getElementById('scene');
+        const pages = document.querySelectorAll('.page');
+        const navItems = document.querySelectorAll('.nav-item');
+        const parallaxContainer = document.getElementById('parallax-container');
+        
+        let currentPage = 0;
+        const tScale = window.matchMedia('(max-width: 1100px), (pointer: coarse)').matches ? 0.78 : 1; // transisi antar halaman sedikit lebih cepat di layar sentuh
+        
+        // --- SISTEM DEKORASI GENERATIF (CSS & JS Murni) ---
+        const squares = [];
+        const small = window.innerWidth < 700; const numSquares = small ? 8 : 15; // Menyebar merata memenuhi layar layaknya PPTX
+        
+        for (let i = 0; i < numSquares; i++) {
+            // Distribusi acak layer: Background (40%), Midground (40%), Foreground Blur (20%)
+            const rand = Math.random();
+            let layer, depth, zIndex, size;
+            
+            if (rand < 0.5) {
+                layer = 'bg'; 
+                size = 15 + Math.random() * 20; 
+                depth = 0.1 + Math.random() * 0.2; 
+                zIndex = 1;
+            } else {
+                layer = 'mid'; 
+                size = 30 + Math.random() * 25; 
+                depth = 0.4 + Math.random() * 0.4; 
+                zIndex = 5;
+            }
+
+            const posX = Math.random() * 95; 
+            const posY = Math.random() * 95; 
+
+            // JS Parallax Wrapper (Fixed position)
+            const wrapper = document.createElement('div');
+            wrapper.style.position = 'fixed';
+            wrapper.style.left = posX + 'vw';
+            wrapper.style.top = posY + 'vh';
+            wrapper.style.width = (size * (small ? 0.7 : 1)) + 'px';
+            wrapper.style.height = (size * (small ? 0.7 : 1)) + 'px';
+            wrapper.style.pointerEvents = 'none'; // Menjamin interaksi aman
+            wrapper.style.zIndex = zIndex;
+            wrapper.style.willChange = 'transform'; // digerakkan lewat rAF (lerp), bukan CSS transition
+
+            // CSS Generative Kotak (Tidak lagi memakai TAG IMG)
+            const sq = document.createElement('div');
+            sq.className = `floating-square ${layer}`;
+            
+            // Variasi Animasi: Arah Geser, Rotasi Dinamis lewat CSS Variables
+            sq.style.setProperty('--move-x', (Math.random() * 40 - 20) + 'px');
+            sq.style.setProperty('--move-y', (Math.random() * 50 - 25) + 'px');
+            sq.style.setProperty('--rot', (Math.random() * 30 - 15) + 'deg');
+            
+            // Variasi Waktu: Durasi melayang lebih cepat (2-4 detik)
+            const floatDuration = 1 + Math.random() * 1;
+            const floatDelay = Math.random() * -2;
+            sq.style.animation = `floatAnim ${floatDuration}s cubic-bezier(0.45, 0.05, 0.55, 0.95) ${floatDelay}s infinite alternate`;
+            wrapper.appendChild(sq);
+            parallaxContainer.appendChild(wrapper);
+            
+            squares.push({ element: wrapper, depth: depth, x: 0, y: 0, kx: 0, prevTotal: 0 });
+        }
+
+        const indicator = document.querySelector('.nav-indicator');
+        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        let activeNav = 0;
+
+        const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+        const motionOK = finePointer && !reduceMotion;
+
+        // --- Reveal bertahap: [selector, urutan awal, varian motion] — tiap section punya karakter gerak sendiri ---
+        const revealMap = {
+            'home': [['.home-deco', 0, 'rv-fade'], ['.home-tag', 0, 'rv-pop'], ['#home p', 4, 'rv-wipe-up'], ['#home .page-content > img', 5, 'rv-spin']],
+            'about': [['.about-title', 0, 'rv-wipe'], ['.social-card-main', 1, 'rv-tilt'], ['.skills-card-main', 2, 'rv-tilt'], ['.about-me-card', 2, 'rv-tilt'], ['.profile-img-main', 3, 'rv-rise']],
+            'skills': [['.nav-back', 0, 'rv-wipe'], ['.skill-large-card', 1, 'rv-flip'], ['.carousel-arrow', 1, 'rv-pop']],
+            'about-detail': [['.nav-back', 0, 'rv-wipe'], ['.about-detail-card', 1, 'rv-tilt']],
+            'social': [['.nav-back', 0, 'rv-wipe'], ['.social-title', 1, 'rv-blur'], ['.social-card', 2, 'rv-fan'], ['.page-content > div:last-child', 7, '']],
+            'gallery': [['.wave-full-bg', 0, 'rv-fade'], ['.gallery-header h1', 0, 'rv-wipe'], ['.gallery-header p', 1, 'rv-wipe-up'], ['.search-wrap', 2, 'rv-tilt'],
+                        ['.gallery-hero-art', 1, 'rv-side'], ['.project-track > *', 2, 'rv-card'], ['.gallery-nav-wrap', 5, 'rv-pop']],
+            'review': [['.review-header h3:not(.right)', 0, 'rv-left'], ['.review-header img', 1, 'rv-pop'], ['.review-header h3.right', 2, 'rv-side']]
+        };
+        Object.entries(revealMap).forEach(([id, groups]) => {
+            const page = document.getElementById(id);
+            groups.forEach(([sel, base, variant]) => {
+                page.querySelectorAll(sel).forEach((el, n) => {
+                    el.classList.add('rv');
+                    if (variant) el.classList.add(variant);
+                    el.style.setProperty('--i', Math.min(base + n, 9));
+                });
+            });
+        });
+        document.querySelectorAll('.social-card').forEach((el, n) => el.style.setProperty('--fan', (n - 2) * 7 + 'deg'));
+        document.querySelectorAll('.tag-outline').forEach((el, n) => el.style.setProperty('--t', n));
+
+        // Teks per huruf (aria-label menjaga aksesibilitas)
+        function splitChars(el, offset = 0) {
+            const text = el.textContent.trim();
+            el.setAttribute('aria-label', text);
+            el.textContent = '';
+            let n = offset;
+            text.split(' ').forEach((w, wi, arr) => {
+                const word = document.createElement('span');
+                word.className = 'word';
+                word.setAttribute('aria-hidden', 'true');
+                [...w].forEach(c => {
+                    const ch = document.createElement('span');
+                    ch.className = 'ch';
+                    ch.textContent = c;
+                    ch.style.setProperty('--c', n++);
+                    word.appendChild(ch);
+                });
+                el.appendChild(word);
+                if (wi < arr.length - 1) el.appendChild(document.createTextNode(' '));
+            });
+            return n;
+        }
+        let charIdx = 0;
+        document.querySelectorAll('#home h1').forEach(h => { charIdx = splitChars(h, charIdx); });
+        document.querySelectorAll('.massive-text, .massive-outline').forEach(h => splitChars(h, 0));
+
+        // Elemen di bawah fold: muncul saat discroll (lihat checkReveal)
+        document.querySelectorAll('.gallery-grid-h > *').forEach((el, n) => { el.classList.add('sr'); el.style.setProperty('--d', (n % 3) * 110 + 'ms'); });
+        document.querySelectorAll('.timeline-list').forEach(ul => ul.querySelectorAll('li').forEach((li, n) => { li.classList.add('sr', 'sr-side'); li.style.setProperty('--d', n * 110 + 'ms'); }));
+        function checkReveal(page) {
+            const pr = page.getBoundingClientRect(), limit = pr.bottom - pr.height * 0.06;
+            page.querySelectorAll('.sr:not(.in)').forEach(el => { if (el.getBoundingClientRect().top < limit) el.classList.add('in'); });
+        }
+
+        // --- Magnetic: elemen interaktif sedikit "tertarik" ke kursor (memakai properti translate) ---
+        function bindMagnet(el, strength) {
+            el.classList.add('mag');
+            el.addEventListener('pointermove', e => {
+                if (e.pointerType !== 'mouse') return;
+                const r = el.getBoundingClientRect();
+                el.style.translate = `${((e.clientX - r.left - r.width / 2) * strength).toFixed(1)}px ${((e.clientY - r.top - r.height / 2) * strength).toFixed(1)}px`;
+            }, { passive: true });
+            el.addEventListener('pointerleave', () => { el.style.translate = ''; });
+        }
+
+        // --- Tilt 3D + lift + cahaya kursor (satu loop rAF hanya untuk kartu yang sedang aktif) ---
+        function bindTilt(el, { max, lift, scale, press = 0.985 }) {
+            const k = reduceMotion ? 0 : 1;
+            max *= k; lift *= k; scale = 1 + (scale - 1) * k; press = 1 + (press - 1) * k;
+            const s = { rx: 0, ry: 0, y: 0, k: 1 }, t = { rx: 0, ry: 0, y: 0, k: 1 };
+            let raf = 0, over = false, rect = null, mx = 0, my = 0, cx = 0, cy = 0;
+            const step = () => {
+                for (const key in s) s[key] += (t[key] - s[key]) * 0.14;
+                cx += (mx - cx) * 0.2; cy += (my - cy) * 0.2;
+                el.style.transform = `perspective(1000px) translate3d(0, ${s.y.toFixed(2)}px, 0) scale(${s.k.toFixed(4)}) rotateX(${s.rx.toFixed(2)}deg) rotateY(${s.ry.toFixed(2)}deg)`;
+                el.style.setProperty('--mx', cx.toFixed(1) + 'px');
+                el.style.setProperty('--my', cy.toFixed(1) + 'px');
+                const settled = !over && Math.abs(s.y) < 0.05 && Math.abs(s.rx) < 0.02 && Math.abs(s.ry) < 0.02 && Math.abs(s.k - 1) < 0.0005;
+                if (settled) { el.style.transform = ''; raf = 0; return; }
+                raf = requestAnimationFrame(step);
+            };
+            const run = () => { if (!raf) raf = requestAnimationFrame(step); };
+            el.addEventListener('pointerenter', e => {
+                if (e.pointerType !== 'mouse') return;
+                over = true; rect = el.getBoundingClientRect();
+                mx = cx = e.clientX - rect.left; my = cy = e.clientY - rect.top;
+                t.y = lift; t.k = scale; run();
+            });
+            el.addEventListener('pointermove', e => {
+                if (!over) return;
+                mx = e.clientX - rect.left; my = e.clientY - rect.top;
+                t.ry = (mx / rect.width - 0.5) * 2 * max;
+                t.rx = -(my / rect.height - 0.5) * 2 * max;
+                run();
+            }, { passive: true });
+            el.addEventListener('pointerleave', () => { over = false; t.rx = t.ry = t.y = 0; t.k = 1; run(); });
+            el.addEventListener('pointerdown', () => { if (over) { t.k = press; t.y = lift / 3; run(); } });
+            el.addEventListener('pointerup', () => { if (over) { t.k = scale; t.y = lift; run(); } });
+        }
+        if (finePointer) {
+            document.documentElement.classList.add('js-tilt');
+            document.querySelectorAll('.social-card-main, .skills-card-main, .about-me-card').forEach(el => { el.classList.add('tilt'); bindTilt(el, { max: 3, lift: -6, scale: 1 }); });
+            document.querySelectorAll('.skill-large-card').forEach(el => { el.classList.add('tilt'); bindTilt(el, { max: 6, lift: -8, scale: 1.01 }); });
+            document.querySelectorAll('.social-card').forEach(el => { el.classList.add('tilt'); bindTilt(el, { max: 7, lift: -8, scale: 1.02 }); });
+            document.querySelectorAll('.project-card-v, .project-card-h').forEach(el => bindTilt(el, { max: 5, lift: -8, scale: 1.012 }));
+        }
+        if (motionOK) {
+            document.querySelectorAll('.nav-item').forEach(el => bindMagnet(el, 0.22));
+            document.querySelectorAll('.btn-cyan, .gallery-nav, .nav-back, .carousel-arrow').forEach(el => bindMagnet(el, 0.3));
+        }
+
+        // --- Gallery: halaman non-aktif tidak boleh bisa difokus keyboard (kartu kini focusable) ---
+        const galleryPage = document.getElementById('gallery');
+        galleryPage.inert = true;
+
+        // --- Gallery: tombol kiri/kanan menggantikan scrollbar ---
+        const track = document.querySelector('.project-track');
+        const btnPrev = document.querySelector('.gallery-nav.prev');
+        const btnNext = document.querySelector('.gallery-nav.next');
+        let visibleCards = 4, maxScroll = 0, navRaf = 0, fitRaf = 0;
+
+        // Lebar track dipas ke jumlah kartu UTUH yang muat, sehingga tidak ada kartu terpotong di kanan
+        function fitGalleryTrack() {
+            const mid = track.parentElement;
+            if (window.matchMedia('(max-width: 1100px)').matches) { // tablet & ponsel: track fluid, swipe + snap
+                const cs = getComputedStyle(track), g = parseFloat(cs.columnGap) || 14;
+                track.style.width = '';
+                mid.style.removeProperty('--track-w');
+                visibleCards = Math.max(1, Math.floor((track.clientWidth - parseFloat(cs.paddingLeft) * 2 + g) / (track.querySelector('.project-card-v').offsetWidth + g)));
+                maxScroll = track.scrollWidth - track.clientWidth;
+                updateGalleryNav();
+                return;
+            }
+            const card = track.querySelector('.project-card-v');
+            const gap = parseFloat(getComputedStyle(track).columnGap) || 25;
+            visibleCards = Math.max(1, Math.floor((mid.clientWidth + gap) / (card.offsetWidth + gap)));
+            const w = visibleCards * card.offsetWidth + (visibleCards - 1) * gap;
+            track.style.width = (w + 48) + 'px'; // + padding kiri/kanan 24px untuk bayangan
+            mid.style.setProperty('--track-w', w + 'px');
+            maxScroll = track.scrollWidth - track.clientWidth; // di-cache: tidak membaca layout tiap event scroll
+            updateGalleryNav();
+        }
+        function updateGalleryNav() {
+            btnPrev.disabled = track.scrollLeft <= 2;
+            btnNext.disabled = track.scrollLeft >= maxScroll - 2;
+        }
+        function scrollGallery(dir) {
+            const card = track.querySelector('.project-card-v');
+            const gap = parseFloat(getComputedStyle(track).columnGap) || 25;
+            track.scrollBy({ left: dir * (card.offsetWidth + gap) * visibleCards, behavior: reduceMotion ? 'auto' : 'smooth' });
+        }
+        const queueFit = () => { cancelAnimationFrame(fitRaf); fitRaf = requestAnimationFrame(fitGalleryTrack); };
+        btnPrev.addEventListener('click', () => scrollGallery(-1));
+        btnNext.addEventListener('click', () => scrollGallery(1));
+        track.addEventListener('scroll', () => { if (!navRaf) navRaf = requestAnimationFrame(() => { navRaf = 0; updateGalleryNav(); }); }, { passive: true });
+        window.addEventListener('resize', queueFit);
+        window.addEventListener('load', fitGalleryTrack);
+        fitGalleryTrack();
+
+        // --- Social (ponsel): bar bawah jadi indikator swipe yang sungguhan ---
+        const socialTrack = document.querySelector('.social-track'), socialThumb = document.querySelector('.social-progress > div');
+        function syncSocialBar() {
+            const max = socialTrack.scrollWidth - socialTrack.clientWidth;
+            if (max < 4) { socialThumb.style.width = '30%'; socialThumb.style.transform = ''; return; }
+            const w = socialTrack.clientWidth / socialTrack.scrollWidth * 100;
+            socialThumb.style.width = w.toFixed(1) + '%';
+            socialThumb.style.transform = `translateX(${(socialTrack.scrollLeft / max * (100 - w) / w * 100).toFixed(1)}%)`;
+        }
+        socialTrack.addEventListener('scroll', syncSocialBar, { passive: true });
+        window.addEventListener('resize', syncSocialBar);
+        window.addEventListener('load', syncSocialBar);
+        syncSocialBar();
+
+        // --- Ponsel: sembunyikan nav bawah saat keyboard terbuka (input search) ---
+        document.addEventListener('focusin', e => { if (e.target.matches('input, textarea')) document.body.classList.add('kb-open'); });
+        document.addEventListener('focusout', () => document.body.classList.remove('kb-open'));
+
+        // --- Skills: tombol + dot (ponsel); panah desktop memakai mekanisme yang sama ---
+        const skillsEl = document.querySelector('.skills-carousel');
+        const skillCards = [...skillsEl.querySelectorAll('.skill-large-card')];
+        const chev = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${d}"/></svg>`;
+        const skillCtl = document.createElement('div');
+        skillCtl.className = 'skills-ctl';
+        skillCtl.innerHTML = `<button type="button" class="sk-btn" aria-label="Previous skill">${chev('M15 5l-7 7 7 7')}</button><div class="skills-dots" aria-hidden="true">${skillCards.map(() => '<i></i>').join('')}</div><button type="button" class="sk-btn" aria-label="Next skill">${chev('M9 5l7 7-7 7')}</button>`;
+        skillsEl.after(skillCtl);
+        const [skPrev, skNext] = skillCtl.querySelectorAll('.sk-btn');
+        const skDots = [...skillCtl.querySelectorAll('i')];
+        const skCenter = c => { const a = skillsEl.getBoundingClientRect(), b = c.getBoundingClientRect(); return (b.left + b.width / 2) - (a.left + a.width / 2); };
+        const skIndex = () => skillCards.reduce((best, c, i) => Math.abs(skCenter(c)) < Math.abs(skCenter(skillCards[best])) ? i : best, 0);
+        function skUpdate() { const i = skIndex(); skDots.forEach((d, n) => d.classList.toggle('on', n === i)); skPrev.disabled = i === 0; skNext.disabled = i === skillCards.length - 1; }
+        function skGo(dir) { const i = Math.min(skillCards.length - 1, Math.max(0, skIndex() + dir)); skillsEl.scrollBy({ left: skCenter(skillCards[i]), behavior: reduceMotion ? 'auto' : 'smooth' }); }
+        skPrev.addEventListener('click', () => skGo(-1));
+        skNext.addEventListener('click', () => skGo(1));
+        document.querySelector('.carousel-arrow.prev').addEventListener('click', () => skGo(-1));
+        document.querySelector('.carousel-arrow.next').addEventListener('click', () => skGo(1));
+        let skRaf = 0;
+        skillsEl.addEventListener('scroll', () => { if (!skRaf) skRaf = requestAnimationFrame(() => { skRaf = 0; skUpdate(); }); }, { passive: true });
+        window.addEventListener('resize', skUpdate);
+        window.addEventListener('load', skUpdate);
+        skUpdate();
+
+        // --- Ponsel: card About me = tinggi card Software Skills ---
+        const skillsCardMain = document.querySelector('.skills-card-main'), aboutCardMain = document.querySelector('.about-me-card');
+        function syncAboutCards() {
+            skillsCardMain.style.minHeight = aboutCardMain.style.minHeight = '';
+            if (!window.matchMedia('(max-width: 700px)').matches) return;
+            const h = Math.max(skillsCardMain.offsetHeight, aboutCardMain.offsetHeight);
+            skillsCardMain.style.minHeight = aboutCardMain.style.minHeight = h + 'px';
+        }
+        window.addEventListener('resize', syncAboutCards);
+        window.addEventListener('load', syncAboutCards);
+        if (document.fonts && document.fonts.ready) document.fonts.ready.then(syncAboutCards);
+        syncAboutCards();
+
+        // --- Drag dengan mouse untuk carousel di layar sempit (sentuhan sudah native) ---
+        function dragScroll(el) {
+            let down = false, moved = false, sx = 0, sl = 0;
+            el.addEventListener('dragstart', e => e.preventDefault());
+            el.addEventListener('pointerdown', e => {
+                if (e.pointerType !== 'mouse' || e.button !== 0 || !window.matchMedia('(max-width: 1100px)').matches || el.scrollWidth <= el.clientWidth + 4) return;
+                down = true; moved = false; sx = e.clientX; sl = el.scrollLeft;
+            });
+            window.addEventListener('pointermove', e => {
+                if (!down) return;
+                const dx = e.clientX - sx;
+                if (!moved && Math.abs(dx) > 4) { moved = true; el.style.scrollSnapType = 'none'; el.style.scrollBehavior = 'auto'; }
+                if (moved) el.scrollLeft = sl - dx;
+            });
+            window.addEventListener('pointerup', () => { if (!down) return; down = false; el.style.scrollSnapType = ''; el.style.scrollBehavior = ''; });
+            el.addEventListener('click', e => { if (moved) { e.stopPropagation(); e.preventDefault(); moved = false; } }, true);
+        }
+        [socialTrack, skillsEl, track].forEach(dragScroll);
+
+        // --- Indikator navigasi (pill meluncur) ---
+        function placeIndicator(animate) {
+            const el = navItems[activeNav];
+            if (!el) return;
+            if (!animate) indicator.style.transition = 'none';
+            indicator.style.width = el.offsetWidth + 'px';
+            indicator.style.height = el.offsetHeight + 'px';
+            indicator.style.transform = `translate(${el.offsetLeft}px, ${el.offsetTop}px)`;
+            if (!animate) { void indicator.offsetWidth; indicator.style.transition = ''; }
+        }
+        placeIndicator(false);
+        window.addEventListener('resize', () => placeIndicator(false));
+        window.addEventListener('load', () => placeIndicator(false));
+        if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => placeIndicator(false));
+
+        // --- Horizontal Navigation ---
+        let kickTarget = 0, kickTimer = null, resetTimers = [], revealTimer = null;
+
+        // Waktu (0..1) saat easing cubic-bezier(0.7, 0, 0.2, 1) mencapai progress p
+        function timeAtProgress(p) {
+            const x1 = 0.7, x2 = 0.2;
+            let lo = 0, hi = 1;
+            for (let k = 0; k < 24; k++) {
+                const u = (lo + hi) / 2;
+                const y = 3 * (1 - u) * u * u + u * u * u;
+                if (y < p) lo = u; else hi = u;
+            }
+            const u = (lo + hi) / 2;
+            return 3 * (1 - u) * (1 - u) * u * x1 + 3 * (1 - u) * u * u * x2 + u * u * u;
+        }
+
+        window.goToPage = function(index) {
+            const dist = Math.abs(index - currentPage);
+            let arriveAt = 0.3;
+            const dir = Math.sign(index - currentPage);
+            currentPage = index;
+
+            // Durasi menyesuaikan jarak: lompatan jauh terasa tetap natural
+            const sceneDur = Math.min(1.9, 1.15 + dist * 0.12) * tScale;
+            scene.style.transitionDuration = sceneDur + 's';
+
+            // Sinkronkan entrance dengan kedatangan slide: hitung kapan halaman tujuan mulai masuk layar
+            // (progress = (dist-1)/dist) pada kurva easing scene, lalu mulai animasi konten setelah itu.
+            if (dist > 0) {
+                arriveAt = timeAtProgress((dist - 1) / dist) * sceneDur;
+                const root = document.documentElement.style;
+                root.setProperty('--page-in-delay', Math.max(0.15, arriveAt).toFixed(2) + 's');
+                root.setProperty('--enter-delay', (Math.max(0.15, arriveAt) + 0.25).toFixed(2) + 's');
+            }
+            scene.style.transform = `translateX(${-(index * 100)}vw)`;
+            setSides();
+            wake();
+
+            // Dekorasi ikut "tertarik" sesaat lalu kembali (parallax kedalaman)
+            if (dist > 0 && !reduceMotion) {
+                kickTarget = -dir * Math.min(1, 0.5 + dist * 0.15);
+                clearTimeout(kickTimer);
+                kickTimer = setTimeout(() => { kickTarget = 0; }, 450 + dist * 80);
+            }
+
+            resetTimers.forEach(clearTimeout);
+            resetTimers = [];
+            pages.forEach((p, i) => {
+                p.classList.toggle('active', i === index);
+                // Reset scroll setelah fade-out selesai agar tidak terlihat melompat
+                if (i !== index && (p.scrollTop !== 0 || p.querySelector('.sr.in'))) {
+                    resetTimers.push(setTimeout(() => {
+                        if (p.classList.contains('active')) return;
+                        p.scrollTop = 0;
+                        p.querySelectorAll('.sr.in').forEach(el => el.classList.remove('in'));
+                    }, 800));
+                }
+            });
+
+            galleryPage.inert = index !== 5;
+            clearTimeout(revealTimer);
+            revealTimer = setTimeout(() => checkReveal(pages[index]), (Math.max(0.15, arriveAt) + 0.6) * 1000);
+
+            // Map nav active state 
+            let mainNavIndex = index;
+            if (index >= 1 && index <= 4) mainNavIndex = 1;
+            if (index === 5) mainNavIndex = 2;
+            if (index === 6) mainNavIndex = 3;
+
+            activeNav = mainNavIndex;
+            navItems.forEach((nav, i) => nav.classList.toggle('active', i === mainNavIndex));
+            placeIndicator(true);
+        };
+
+        // --- Arah masuk halaman (parallax berlapis): halaman di kiri/kanan halaman aktif ---
+        function setSides() { pages.forEach((p, i) => p.style.setProperty('--side', Math.sign(i - currentPage))); }
+        setSides();
+
+        // --- Scroll: jeda animasi dekorasi saat scroll + reveal elemen bawah fold (satu listener, rAF-throttled) ---
+        let scrollTimer = 0, revealRaf = 0, revealTarget = null;
+        document.addEventListener('scroll', e => {
+            document.body.classList.add('is-scrolling');
+            clearTimeout(scrollTimer);
+            scrollTimer = setTimeout(() => document.body.classList.remove('is-scrolling'), 140);
+            if (e.target.classList && e.target.classList.contains('page')) {
+                revealTarget = e.target;
+                if (!revealRaf) revealRaf = requestAnimationFrame(() => { revealRaf = 0; checkReveal(revealTarget); });
+            }
+        }, { capture: true, passive: true });
+
+        // --- Kursor Parallax: satu loop rAF yang tidur otomatis saat tidak ada gerakan ---
+        const profile = document.querySelector('.profile-img-main');
+        const pointer = { x: 0, y: 0, px: window.innerWidth / 2, py: window.innerHeight / 2 };
+        const prof = { x: 0, y: 0 };
+        let loopOn = false, idle = 0;
+
+        function wake() { idle = 0; if (!loopOn) { loopOn = true; requestAnimationFrame(frame); } }
+        document.addEventListener('mousemove', (e) => {
+            pointer.x = (e.clientX / window.innerWidth - 0.5) * 2;
+            pointer.y = (e.clientY / window.innerHeight - 0.5) * 2;
+            pointer.px = e.clientX; pointer.py = e.clientY;
+            wake();
+        }, { passive: true });
+
+        function frame() {
+            let moving = false;
+            for (const s of squares) {
+                const follow = reduceMotion ? 1 : 0.045 + s.depth * 0.07; // layer dekat lebih responsif
+                const ty = pointer.y * 25 * s.depth, tk = kickTarget * 90 * s.depth;
+                s.x += (pointer.x * 25 * s.depth - s.x) * follow;
+                s.y += (ty - s.y) * follow;
+                s.kx += (tk - s.kx) * 0.04;
+                const total = s.x + s.kx, vx = total - s.prevTotal;
+                s.prevTotal = total;
+                if (Math.abs(vx) > 0.01 || Math.abs(ty - s.y) > 0.05 || Math.abs(tk - s.kx) > 0.05) moving = true;
+                const stretch = 1 + Math.min(0.22, Math.abs(vx) * 0.025); // regangan halus (filter blur per-frame dihapus: berat)
+                s.element.style.transform = `translate3d(${total.toFixed(2)}px, ${s.y.toFixed(2)}px, 0) scaleX(${stretch.toFixed(3)})`;
+            }
+            if (profile && motionOK && currentPage === 1) { // layer foto bergerak berlawanan arah kursor
+                prof.x += (pointer.x * -14 - prof.x) * 0.06;
+                prof.y += (pointer.y * -6 - prof.y) * 0.06;
+                profile.style.transform = `translate3d(${prof.x.toFixed(2)}px, ${prof.y.toFixed(2)}px, 0)`;
+                if (Math.abs(pointer.x * -14 - prof.x) > 0.05 || Math.abs(pointer.y * -6 - prof.y) > 0.05) moving = true;
+            }
+            idle = moving ? 0 : idle + 1;
+            if (idle > 30) { loopOn = false; return; }
+            requestAnimationFrame(frame);
+        }
+        wake();
+    </script>
+</body>
+</html>
