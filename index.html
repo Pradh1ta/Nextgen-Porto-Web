@@ -5,9 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
     <meta name="theme-color" content="#fcfcfc">
     <title>Cinematic Portfolio</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap">
     <style>
         @font-face {
             font-family: Benzin;
@@ -54,7 +51,7 @@
         /* --- Navigasi Sesuai Slide 1 --- */
         nav { position: fixed; top: 0; width: 100%; display: flex; justify-content: center; padding: 25px; z-index: 100; pointer-events: none; }
         .nav-container { position: relative; display: flex; gap: 30px; background: var(--nav-bg); padding: 12px 35px; border-radius: 40px; pointer-events: auto; }
-        .nav-item { position: relative; z-index: 1; cursor: pointer; user-select: none; font-family: var(--font-syne); font-weight: 600; font-size: 16px; transition: color 0.5s var(--ease-out), background-color 0.5s var(--ease-out), transform 0.5s var(--ease-out); padding: 6px 18px; border-radius: 20px; }
+        .nav-item { position: relative; z-index: 1; cursor: pointer; user-select: none; font-family: Poppins; font-weight: normal; font-size: 16px; transition: color 0.5s var(--ease-out), background-color 0.5s var(--ease-out), transform 0.5s var(--ease-out); padding: 6px 18px; border-radius: 20px; }
         .nav-item.active { color: white; } /* Pill biru gelap (#00607a) kini digeser oleh .nav-indicator */
         .nav-item:hover:not(.active) { background: rgba(0, 96, 122, 0.09); }
         .nav-item:active { transform: scale(0.95); transition-duration: 0.15s; }
@@ -219,11 +216,11 @@
         .social-title { font-size: 4.5vw; line-height: 0.95; margin-bottom: 50px; }
         .social-track { display: flex; justify-content: center; gap: 20px; position: relative; margin-bottom: 40px; }
         .social-card { width: 220px; height: 300px; background: white; border-radius: 30px; padding: 25px 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); display: flex; flex-direction: column; overflow: hidden; position: relative; }
-        .social-card-header { display: flex; justify-content: space-between; font-size: 10px; color: var(--text-muted); margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .social-card-header { display: flex; justify-content: space-between; font-size: 10px; color: var(--text-muted); margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 10px; font-family: Poppins; }
         .social-card h3 { font-size: 22px; line-height: 1; margin-bottom: 5px; }
-        .social-card p { font-size: 10px; color: var(--text-muted); word-break: break-all; }
+        .social-card p { font-size: 8px; color: var(--text-muted); word-break: break-all; font-family: Poppins}
         
-        .social-icon-huge { width: 160px; position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); }
+        .social-icon-huge { width: 140px; position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); }
         .social-arrow { position: absolute; bottom: 20px; left: 20px; width: 35px; height: 35px; background: #222; color: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; z-index: 2; }
         
         /* =========================================
@@ -238,24 +235,33 @@
         }
         
         .search-wrap { display: flex; align-items: stretch; gap: 15px; margin-top: 30px; }
-        .search-box { border: 1.5px solid #1a1a1a; border-radius: 40px; padding: 12px 25px; display: flex; align-items: center; width: 280px; background: transparent; }
+        .search-box { border: 1.5px solid #1a1a1a; border-radius: 40px; padding: 12px 25px; display: flex; align-items: center; width: 200px; background: transparent; }
         .search-box input { border: none; outline: none; width: 100%; font-family: var(--font-inter); font-size: 16px; background: transparent; }
-        .btn-cyan { background: var(--accent-cyan); color: white; padding: 14px 35px; border-radius: 40px; font-family: var(--font-syne); font-weight: 600; cursor: pointer; font-size: 16px; }
+        .btn-cyan { background: var(--accent-cyan); color: white; padding: 14px 20px; border-radius: 40px; font-family: var(--font-syne); font-weight: 600; cursor: pointer; font-size: 16px; }
 
         .retro-profile { position: relative; width: 420px; height: 200px; display: flex; align-items: center; }
         .retro-frame-img { position: absolute; right: 0; width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
         .retro-content { position: relative; display: flex; align-items: center; gap: 20px; padding-left: 60px; }
         .retro-logo { width: 85px; height: 85px; background: var(--accent-cyan); border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 35px; font-family: var(--font-syne); font-weight: 700; }
         
-        .gallery-middle { position: relative; width: 100%; padding: 40px 0; margin-bottom: 30px; }
-        .wave-full-bg { position: absolute; top: 0; left: -10vw; width: 120vw; height: 100%; object-fit: cover; z-index: -1; pointer-events: none; }
+        .gallery-middle { --g: 33px; position: relative; width: 100%; padding: 40px 0 calc(var(--g) - 30px); margin-bottom: 30px; } /* --g = jarak simetris: bawah kartu -> scrollbar = scrollbar -> elemen di bawahnya */
+        .wave-full-bg { position: absolute; top: -130px; left: -10vw; width: 120vw; height: 100%; object-fit: cover; z-index: -1; pointer-events: none; }
         
         /* Track horizontal: scrollbar disembunyikan, navigasi lewat tombol kiri/kanan (swipe & trackpad tetap berfungsi) */
-        .project-track { display: flex; gap: 25px; overflow-x: auto; padding: 16px 24px 36px; margin: -16px -24px -1px; scroll-padding-inline: 24px; scroll-snap-type: x mandatory; scrollbar-width: none; -ms-overflow-style: none; }
+        .project-track { display: flex; gap: 25px; overflow-x: auto; padding: 16px 24px 36px; margin: -16px -24px calc(var(--g) - 36px); scroll-padding-inline: 24px; scroll-snap-type: x mandatory; scrollbar-width: none; -ms-overflow-style: none; }
         .project-track::-webkit-scrollbar { display: none; }
 
         /* Tombol navigasi: menggantikan posisi scrollbar (di bawah kartu, rata kanan dengan tepi kartu terakhir yang terlihat) */
-        .gallery-nav-wrap { position: absolute; top: 408px; left: var(--track-w, 1115px); transform: translateX(-100%); z-index: 3; display: flex; gap: 10px; }
+        /* Baris scrollbar: tepat di tengah antara bawah kartu dan elemen di bawahnya (tinggi baris = tinggi tombol) */
+        .gallery-scroll-row { position: relative; z-index: 3; display: flex; align-items: center; gap: 18px; width: var(--track-w, 1115px); max-width: 100%; height: 38px; }
+        .gallery-scrollbar { position: relative; flex: 1; min-width: 0; height: 10px; border-radius: 999px; background: rgba(0,0,0,0.14); cursor: pointer; touch-action: none; user-select: none; -webkit-user-select: none; transition: opacity 0.4s ease; }
+        .gallery-scrollbar::before { content: ''; position: absolute; inset: -12px 0; } /* area klik lebih lega */
+        .gallery-scrollbar-thumb { position: absolute; top: 0; left: 0; height: 100%; width: 40px; border-radius: inherit; background: #1a1a1a; cursor: grab; will-change: transform; transition: background-color 0.35s ease, box-shadow 0.35s ease; }
+        .gallery-scrollbar:hover .gallery-scrollbar-thumb, .gallery-scrollbar:focus-visible .gallery-scrollbar-thumb { background: var(--accent-cyan); box-shadow: 0 4px 12px -3px rgba(0,196,181,0.55); }
+        .gallery-scrollbar.dragging .gallery-scrollbar-thumb { background: var(--accent-cyan); cursor: grabbing; }
+        .gallery-scrollbar:focus-visible { outline: 2px solid var(--accent-cyan); outline-offset: 6px; }
+        .gallery-scrollbar.no-scroll { opacity: 0.35; pointer-events: none; }
+        .gallery-nav-wrap { position: relative; z-index: 3; display: flex; gap: 10px; flex-shrink: 0; }
         .gallery-nav {
             width: 38px; height: 38px; padding: 0; border-radius: 50%; cursor: pointer;
             display: flex; align-items: center; justify-content: center;
@@ -282,8 +288,8 @@
             outline: 2px solid transparent; outline-offset: 5px;
             transition: outline-color 0.3s ease; /* transform & cahaya digerakkan JS (tanpa transisi box-shadow = tanpa repaint) */
         }
-        .project-card-v { width: 260px; height: 360px; scroll-snap-align: start; box-shadow: 0 2px 4px rgba(0,0,0,0.10), 0 16px 26px -10px rgba(0,0,0,0.40); }
-        .project-card-h { height: 260px; box-shadow: 0 2px 4px rgba(0,0,0,0.08), 0 14px 24px -10px rgba(0,0,0,0.30); }
+        .project-card-v { width: var(--vw, 260px); height: auto; aspect-ratio: 13 / 18; scroll-snap-align: start;}
+        .project-card-h { height: 260px; }
 
         /* Hover & fokus keyboard memakai state yang sama */
         :is(.project-card-v, .project-card-h):focus-visible { transform: translateY(-8px) scale(1.012); }
@@ -553,7 +559,7 @@
             :root { --pad: 32px; }
             nav { padding: 16px; }
             .nav-container { gap: 8px; padding: 8px 20px; }
-            .nav-item { font-size: 15px; padding: 9px 20px; }
+            .nav-item { font-size: 15px; padding: 9px 20px; font-family: Poppins; font-weight: normal;}
             .page { padding: 100px 0 56px; }
             .nav-back { min-height: 44px; margin-bottom: 24px; }
             .home-deco { width: min(88vw, 62dvh); }
@@ -594,9 +600,9 @@
             .gallery-title { font-size: clamp(36px, 6.6vw, 60px); }
             .gallery-sub { font-size: 17px; }
             .gallery-hero-art.hero-art-main { height: clamp(260px, 38vw, 380px); right: -2vw; bottom: -70px; transform: none; }
-            .gallery-middle { display: flex; flex-direction: column; padding: 56px 0 24px; margin-bottom: 14px; }
-            .project-track { margin: -16px calc(var(--pad) * -1) -1px; padding: 16px var(--pad) 30px; scroll-padding-inline: var(--pad); }
-            .gallery-nav-wrap { position: static; transform: none; order: 2; align-self: flex-end; margin-top: 6px; }
+            .gallery-middle { --g: 32px; display: flex; flex-direction: column; padding: 56px 0 calc(var(--g) - 14px); margin-bottom: 14px; }
+            .project-track { margin: -16px calc(var(--pad) * -1) calc(var(--g) - 30px); padding: 16px var(--pad) 30px; scroll-padding-inline: var(--pad); }
+            .gallery-scroll-row { width: 100%; height: 44px; gap: 14px; }
             .gallery-nav { width: 44px; height: 44px; }
             .gallery-grid-h { grid-template-columns: repeat(2, 1fr); gap: 18px; padding-bottom: 20px; }
 
@@ -612,7 +618,7 @@
             /* Navigasi di bawah: terjangkau satu tangan, memenuhi lebar layar */
             nav { top: auto; bottom: 0; padding: 0 14px calc(14px + var(--safe-b)); }
             .nav-container { width: 100%; max-width: 400px; gap: 2px; padding: 5px; border-radius: 32px; box-shadow: 0 10px 28px rgba(0,0,0,0.14), 0 0 0 1px rgba(0,0,0,0.06); animation-name: navRise; }
-            .nav-item { flex: 1; text-align: center; font-size: 14px; padding: 13px 4px; border-radius: 26px; }
+            .nav-item { flex: 1; text-align: center; font-size: 14px; padding: 13px 4px; border-radius: 26px; font-family: Poppins; }
             .nav-indicator { border-radius: 26px; }
             body.kb-open nav { opacity: 0; visibility: hidden; }
 
@@ -674,7 +680,7 @@
             .search-box { flex: 1; width: auto; min-width: 0; padding: 0 18px; min-height: 48px; }
             .btn-cyan { padding: 0 26px; min-height: 48px; }
             .gallery-hero-art.hero-art-main { position: relative; order: 2; align-self: flex-end; right: auto; bottom: auto; height: min(28dvh, 230px); margin: 14px -6px -36px 0; }
-            .gallery-middle { padding: 40px 0 18px; }
+            .gallery-middle { --g: 30px; padding: 40px 0 calc(var(--g) - 14px); }
             .project-card-v { width: clamp(224px, 68vw, 290px); height: auto; aspect-ratio: 13 / 18; }
             .project-info { padding: 18px; }
             .project-info h4 { font-size: 23px; }
@@ -697,7 +703,7 @@
             :root { --pad: 28px; }
             nav { top: 0; bottom: auto; padding: 8px; }
             .nav-container { width: auto; max-width: none; padding: 5px 14px; animation-name: navDrop; }
-            .nav-item { flex: none; font-size: 14px; padding: 7px 16px; }
+            .nav-item { flex: none; font-size: 14px; padding: 7px 16px;  font-family: Poppins; font-weight: normal;}
             .page { padding: 66px 0 24px; }
             #home h1:first-of-type { font-size: min(9.4vw, 15vh); }
             #home h1:nth-of-type(2) { font-size: min(8.6vw, 13vh); }
@@ -757,7 +763,7 @@
             #home { padding-block: calc(86px + max(var(--safe-t), var(--safe-b))); }
             .home-tag { margin-bottom: 20px; }
             #home h1:nth-of-type(2) { margin-top: 6px; }
-            #home p { margin-top: 22px; font-size: 13.5px; max-width: 100%; padding-inline: 6px; }
+            #home p { margin-top: 22px; font-size: 10px; max-width: 100%; padding-inline: 6px; }
             #home .page-content > img { margin-top: 34px !important; }
 
             /* About: foto jadi hero di kanan, judul di kiri, kartu menumpuk menutupi kaki foto */
@@ -780,7 +786,7 @@
             #social .nav-back { align-self: flex-start; }
             .social-title { margin-top: auto; font-size: clamp(26px, 8vw, 38px); }
             .social-progress { margin-bottom: auto !important; }
-            .social-card p { font-size: 11px; }
+            .social-card p { font-size: 11px;  }
 
             /* Gallery: judul penuh, subjudul + Guin berdampingan, lalu search */
             .gallery-header { display: grid; grid-template-columns: minmax(0, 1fr) 40%; column-gap: 12px; align-items: start; }
@@ -800,6 +806,12 @@
             .gallery-sub { grid-column: 1 / -1; }
         }
 
+        @media (max-width: 700px) {
+            #gallery .wave-full-bg {
+                top: -220px;
+            }
+        }
+
         /* Tablet: isi About berada di tengah layar */
         @media (min-width: 701px) and (max-width: 1100px) {
             #about { padding-block: 100px; }
@@ -809,6 +821,14 @@
         /* Ponsel: judul Gallery sedikit lebih besar */
         @media (max-width: 700px) {
             .gallery-title { font-size: clamp(36px, 11vw, 50px); }
+        }
+
+        /* Ponsel (Android & iPhone): judul, sub text, dan card artwork portrait Gallery rata tengah */
+        @media (max-width: 700px) {
+            .gallery-title, .gallery-sub { text-align: center; margin-inline: auto; justify-self: center; }
+            .gallery-sub { font-size: 12.5px; line-height: 1.55; max-width: 26ch; text-wrap: balance; letter-spacing: 0.1px; }
+            .project-track { --cw: clamp(224px, 68vw, 290px); padding-inline: max(var(--pad), calc((100% + var(--pad) * 2 - var(--cw)) / 2)); scroll-padding-inline: 0; }
+            .project-card-v { width: var(--cw); scroll-snap-align: center; scroll-snap-stop: always; }
         }
 
         /* Ponsel: Social bisa di-swipe (alur blok biasa, tanpa flex-column), card About me = card Software Skills */
@@ -841,6 +861,46 @@
            Dokumen dikunci seukuran layar (tanpa overflow yang bisa dihitung browser) dan zoom-out dimatikan via meta viewport. */
         html { overflow: hidden; width: 100%; height: 100%; }
         body { position: fixed; inset: 0; width: 100%; height: 100%; overflow: hidden; }
+
+        /* Ikon panah custom: assets/icon/arrow-icon.png (card About/Social/Skills) dan assets/icon/arrow-artwork-icon.png (Gallery) */
+        .arrow-icon-dark img { width: 50px; height: 50px; object-fit: contain; display: block; pointer-events: none; -webkit-user-drag: none;filter: brightness() invert(1); }
+        .social-card-main .link-icon { display: flex; align-items: center; }
+        .social-card-main .link-icon img { width: 50px; height: 50px; object-fit: contain; display: block; pointer-events: none; -webkit-user-drag: none; filter: brightness() invert(1); }
+        .project-link-arrow img { width: 18px; height: 18px; object-fit: contain; display: block; pointer-events: none; -webkit-user-drag: none; filter: brightness() invert(1); }
+        .search-icon { width: 20px; height: 20px; object-fit: contain; margin-right: 15px; display: block; flex-shrink: 0; }
+
+        /* Gallery desktop: 5 kartu portrait sekaligus (lebar dihitung JS lewat --vw; tablet tetap 260px) */
+        @media (max-width: 1100px) { .project-card-v { --vw: 260px; } }
+        @media (min-width: 1101px) {
+            .project-card-v .project-info { padding: 18px; }
+            .project-card-v .project-info h4 { font-size: 22px; margin-bottom: 10px; }
+            .project-card-v .project-info::after { top: 19px; right: 17px; }
+            .project-card-v .project-tag { top: 15px; left: 15px; }
+        }
+
+        #gallery .gallery-middle {
+            margin-top: 70px
+        }
+
+        /* =========================================
+           POP-UP INFO (muncul sekali per sesi di Home)
+           ========================================= */
+        .welcome-pop { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: max(20px, env(safe-area-inset-top, 0px)) max(20px, env(safe-area-inset-right, 0px)) max(20px, env(safe-area-inset-bottom, 0px)) max(20px, env(safe-area-inset-left, 0px)); background: rgba(20,20,22,0.46); opacity: 0; visibility: hidden; transition: opacity 0.45s var(--ease-out), visibility 0s linear 0.45s; }
+        .welcome-pop.show { opacity: 1; visibility: visible; transition-delay: 0s; }
+        .welcome-card { width: min(100%, 380px); background: #fff; border-radius: 28px; padding: 30px 26px 24px; text-align: center; box-shadow: 0 30px 70px -20px rgba(0,0,0,0.45); transform: translateY(18px) scale(0.97); transition: transform 0.6s var(--ease-out); }
+        .welcome-pop.show .welcome-card { transform: none; }
+        .welcome-icon { width: 54px; height: 54px; margin: 0 auto 16px; border-radius: 50%; background: var(--accent-cyan); color: #fff; display: flex; align-items: center; justify-content: center; }
+        .welcome-icon svg { width: 26px; height: 26px; }
+        .welcome-card h2 { font-family: Coolvetica, var(--font-syne); font-weight: 400; font-size: 26px; line-height: 1.1; letter-spacing: 0.5px; margin-bottom: 14px; }
+        .welcome-card p { font-family: Poppins, var(--font-inter); font-size: 14px; line-height: 1.6; color: var(--text-muted); margin-bottom: 10px; text-wrap: balance; }
+        .welcome-card p strong { color: var(--text-main); font-weight: 600; }
+        .welcome-only-mobile { display: none; }
+        .welcome-btn { margin-top: 12px; width: 100%; border: 0; cursor: pointer; background: #1a1a1a; color: #fff; font-family: var(--font-syne); font-weight: 600; font-size: 16px; padding: 14px 20px; min-height: 48px; border-radius: 40px; transition: background-color 0.3s ease, transform 0.2s ease; }
+        .welcome-btn:hover { background: var(--accent-cyan); }
+        .welcome-btn:active { transform: scale(0.97); }
+        .welcome-btn:focus-visible { outline: 2px solid var(--accent-cyan); outline-offset: 3px; }
+        @media (max-width: 1100px) { .welcome-only-mobile { display: block; } }
+        @media (prefers-reduced-motion: reduce) { .welcome-pop, .welcome-card { transition-duration: 0.01s; } }
     </style>
 </head>
 <body>
@@ -887,13 +947,13 @@
                         <h2 class="syne about-title" style="font-family: Coolvetica; letter-spacing: 1px; font-weight: 100;">i'm Pradhita I'm a Graphic <span>Designer</span></h2>
                         
                         <div class="social-card-main card" onclick="goToPage(4)">
-                            <h3 style="font-family: Coolvetica; font-weight: 100;">Social Media</h3>
-                            <div class="link-icon">🔗</div>
+                            <h3 style="font-family: Coolvetica; font-weight: 100; letter-spacing: normal; font-size: 25px;">Social Media</h3>
+                            <div class="link-icon"><img decoding="async" src="assets/icon/arrow-icon.png" alt=""></div>
                         </div>
 
                         <div class="skills-card-main card" onclick="goToPage(2)">
-                            <h3 style="font-family: Coolvetica; letter-spacing: 1px; font-weight: 100;">Software Skills Infomation</h3>
-                            <div class="arrow-icon-dark">↗</div>
+                            <h3 style="font-family: Coolvetica; letter-spacing: 1px; font-weight: 100; font-size: 25px;">Software Skills</h3>
+                            <div class="arrow-icon-dark"><img decoding="async" src="assets/icon/arrow-icon.png" alt=""></div>
                             <div class="skill-list-mini">
                                 <div class="skill-item-mini"><img decoding="async" src="assets/skills/ps-icon.png"><div><p style="font-size:12px; font-weight:600;">Photoshop</p><div class="bar-bg"><div class="bar-fill" style="width:70%;"></div></div></div></div>
                                 <div class="skill-item-mini"><img decoding="async" src="assets/skills/alight-icon.png"><div><p style="font-size:12px; font-weight:600;">Alight Motion</p><div class="bar-bg"><div class="bar-fill" style="width:50%;"></div></div></div></div>
@@ -908,9 +968,9 @@
                         <!-- Dipertahankan: Font Editan Anda -->
                         <h2 class="syne about-title" style="font-family: Coolvetica; letter-spacing: 1px; font-weight: 100;">Getting to know me <span>Better</span></h2>
                         <div class="about-me-card card" onclick="goToPage(3)">
-                            <h3 style="font-family: Coolvetica; font-weight: 100;">About me</h3>
-                            <p style="font-family: Poppins; line-height: 1.2;">I'm an <strong>Informatics Engineering student</strong> passionate about <strong>UI/UX design, web development, and AI.</strong> I love turning creative ideas into meaningful digital experiences.</p>
-                            <div class="arrow-icon-dark">↗</div>
+                            <h3 style="font-family: Coolvetica; font-weight: 100; font-size: 30px;">About me</h3>
+                            <p style="font-family: Poppins; line-height: 1.2;">I'm an Informatics Engineering student passionate about UI/UX design, web development, and AI.
+                            <div class="arrow-icon-dark"><img decoding="async" src="assets/icon/arrow-icon.png" alt=""></div>
                             <div class="about-wave-bg"></div>
                         </div>
                     </div>
@@ -1008,35 +1068,35 @@
                 <h1 class="syne social-title" style="font-family: Coolvetica; letter-spacing: 1px; font-weight: 100;">Lets stay connected!<br>Explore my Profiles</h1>
                 
                 <div class="social-track">
-                    <div class="social-card">
+                    <div class="social-card" onclick="window.open('https://www.instagram.com/pradhx/', 'blank')" style="cursor: pointer;">
                         <div class="social-card-header"><span>Instagram</span><span>Portofolio</span></div>
                         <h3 class="syne" style="font-family: Coolvetica; font-weight: 100; letter-spacing: 1px;" >Explore<br>Instagram</h3>
                         <p>https://www.instagram.com/pradhx/</p>
                         <div class="social-wave-bg"></div>
                         <img decoding="async" src="assets/social/ig-icon.png" class="social-icon-huge">
                     </div>
-                    <div class="social-card">
+                    <div class="social-card" onclick="window.open('https://github.com/pradhita', 'blank')" style="cursor: pointer;" >
                         <div class="social-card-header"><span>Github</span><span>Personal</span></div>
                         <h3 class="syne" style="font-family: Coolvetica; font-weight: 100; letter-spacing: 1px;" >Explore<br>Github</h3>
                         <p>https://github.com/pradhita</p>
                         <div class="social-wave-bg"></div>
                         <img decoding="async" src="assets/social/github-icon.png" class="social-icon-huge">
                     </div>
-                    <div class="social-card">
+                    <div class="social-card" onclick="window.open('https://id.pinterest.com/pradhita1010/', 'blank')" style="cursor: pointer;">
                         <div class="social-card-header"><span>Pinterest</span><span>Personal</span></div>
                         <h3 class="syne" style="font-family: Coolvetica; font-weight: 100; letter-spacing: 1px;" >Explore<br>Pinterest</h3>
                         <p>https://id.pinterest.com/pradhita1010/</p>
                         <div class="social-wave-bg"></div>
                         <img decoding="async" src="assets/social/pin-icon.png" class="social-icon-huge">
                     </div>
-                    <div class="social-card">
+                    <div class="social-card" onclick="window.open('https://x.com/pradhita', 'blank')" style="cursor: pointer;">
                         <div class="social-card-header"><span>X</span><span>Personal</span></div>
                         <h3 class="syne" style="font-family: Coolvetica; font-weight: 100; letter-spacing: 1px;" >Explore<br>X</h3>
                         <p>https://x.com/pradhita</p>
                         <div class="social-wave-bg"></div>
                         <img decoding="async" src="assets/social/x-icon.png" class="social-icon-huge">
                     </div>
-                    <div class="social-card">
+                    <div class="social-card" onclick="window.open('https://facebook.com/pradhita', 'blank')" style="cursor: pointer;">
                         <div class="social-card-header"><span>Facebook</span><span>Personal</span></div>
                         <h3 class="syne" style="font-family: Coolvetica; font-weight: 100; letter-spacing: 1px;" >Explore<br>Facebook</h3>
                         <p>https://facebook.com/pradhita</p>
@@ -1065,123 +1125,127 @@
                         
                         <div class="search-wrap">
                             <div class="search-box">
-                                <span style="margin-right: 15px;">🔍</span>
+                                <img src="assets/icon/search-icon.png" alt="" class="search-icon">
                                 <input type="text" placeholder="Search">
                             </div>
-                            <div class="btn-cyan">More</div>
+                            <div class="btn-cyan" style="font-family: Poppins;">More</div>
                         </div>
                     </div>
                 </div>
 
                 <div class="gallery-middle">
                     <img decoding="async" src="assets/gallery/wave-bg.png" class="wave-full-bg" alt="">
-                    <div class="gallery-nav-wrap">
-                        <button type="button" class="gallery-nav prev" aria-label="Scroll left" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
-                        <button type="button" class="gallery-nav next" aria-label="Scroll right"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
-                    </div>
-                    
+
                     <div class="project-track">
                         <div class="project-card-v" tabindex="0" style="background-image: url('assets/gallery/project-v1.png');">
                             <div class="project-info">
                                 <div><span class="project-tag">Games</span><h4 class="syne" style="letter-spacing: 1px;">Cover Art</h4><p>See more...</p></div>
-                                <div class="project-link-arrow" aria-hidden="true">↗</div>
+                                <div class="project-link-arrow" aria-hidden="true"><img decoding="async" src="assets/icon/arrow-artwork-icon.png" alt=""></div>
                             </div>
                         </div>
                         <div class="project-card-v" tabindex="0" style="background-image: url('assets/gallery/project-v2.png');">
                             <div class="project-info">
                                 <div><span class="project-tag">Artwork</span><h4 class="syne" style="letter-spacing: 1px;">Pricelist MLBB</h4><p>See more...</p></div>
-                                <div class="project-link-arrow" aria-hidden="true">↗</div>
+                                <div class="project-link-arrow" aria-hidden="true"><img decoding="async" src="assets/icon/arrow-artwork-icon.png" alt=""></div>
                             </div>
                         </div>
                         <div class="project-card-v" tabindex="0" style="background-image: url('assets/gallery/project-v3.png');">
                             <div class="project-info">
                                 <div><span class="project-tag">Artwork</span><h4 class="syne" style="letter-spacing: 1px;">Pricelist Genshin</h4><p>See more...</p></div>
-                                <div class="project-link-arrow" aria-hidden="true">↗</div>
+                                <div class="project-link-arrow" aria-hidden="true"><img decoding="async" src="assets/icon/arrow-artwork-icon.png" alt=""></div>
                             </div>
                         </div>
                         <div class="project-card-v" tabindex="0" style="background-image: url('assets/gallery/project-v4.png');">
                             <div class="project-info">
                                 <div><span class="project-tag">Artwork</span><h4 class="syne" style="letter-spacing: 1px;">Discord Server</h4><p>See more...</p></div>
-                                <div class="project-link-arrow" aria-hidden="true">↗</div>
+                                <div class="project-link-arrow" aria-hidden="true"><img decoding="async" src="assets/icon/arrow-artwork-icon.png" alt=""></div>
                             </div>
                         </div>
                         <div class="project-card-v" tabindex="0" style="background-image: url('assets/gallery/project-v5.png');">
                             <div class="project-info">
                                 <div><span class="project-tag">Artwork</span><h4 class="syne" style="letter-spacing: 1px;">Simple Design</h4><p>See more...</p></div>
-                                <div class="project-link-arrow" aria-hidden="true">↗</div>
+                                <div class="project-link-arrow" aria-hidden="true"><img decoding="async" src="assets/icon/arrow-artwork-icon.png" alt=""></div>
                             </div>
                         </div>
                         <div class="project-card-v" tabindex="0" style="background-image: url('assets/gallery/project-v6.png');">
                             <div class="project-info">
                                 <div><span class="project-tag">Artwork</span><h4 class="syne" style="letter-spacing: 1px;">Ruan Mei</h4><p>See more...</p></div>
-                                <div class="project-link-arrow" aria-hidden="true">↗</div>
+                                <div class="project-link-arrow" aria-hidden="true"><img decoding="async" src="assets/icon/arrow-artwork-icon.png" alt=""></div>
                             </div>
                         </div>
                         <div class="project-card-v" tabindex="0" style="background-image: url('assets/gallery/project-v7.png');">
                             <div class="project-info">
                                 <div><span class="project-tag">Artwork</span><h4 class="syne" style="letter-spacing: 1px;">Artwork Reze</h4><p>See more...</p></div>
-                                <div class="project-link-arrow" aria-hidden="true">↗</div>
+                                <div class="project-link-arrow" aria-hidden="true"><img decoding="async" src="assets/icon/arrow-artwork-icon.png" alt=""></div>
                             </div>
                         </div>
                         <div class="project-card-v" tabindex="0" style="background-image: url('assets/gallery/project-v8.png');">
                             <div class="project-info">
                                 <div><span class="project-tag">Artwork</span><h4 class="syne" style="letter-spacing: 1px;">Neo Classic</h4><p>See more...</p></div>
-                                <div class="project-link-arrow" aria-hidden="true">↗</div>
+                                <div class="project-link-arrow" aria-hidden="true"><img decoding="async" src="assets/icon/arrow-artwork-icon.png" alt=""></div>
                             </div>
                         </div>
                         <div class="project-card-v" tabindex="0" style="background-image: url('assets/gallery/project-v9.png');">
                             <div class="project-info">
                                 <div><span class="project-tag">Artwork</span><h4 class="syne" style="letter-spacing: 1px;">School Memory</h4><p>See more...</p></div>
-                                <div class="project-link-arrow" aria-hidden="true">↗</div>
+                                <div class="project-link-arrow" aria-hidden="true"><img decoding="async" src="assets/icon/arrow-artwork-icon.png" alt=""></div>
                             </div>
                         </div>
                         <div class="project-card-v" tabindex="0" style="background-image: url('assets/gallery/project-v10.png');">
                             <div class="project-info">
                                 <div><span class="project-tag">Artwork</span><h4 class="syne" style="letter-spacing: 1px;">Self Artwork</h4><p>See more...</p></div>
-                                <div class="project-link-arrow" aria-hidden="true">↗</div>
+                                <div class="project-link-arrow" aria-hidden="true"><img decoding="async" src="assets/icon/arrow-artwork-icon.png" alt=""></div>
                             </div>
                         </div>
                         <div class="project-card-v" tabindex="0" style="background-image: url('assets/gallery/project-v11.png');">
                             <div class="project-info">
                                 <div><span class="project-tag">Artwork</span><h4 class="syne" style="letter-spacing: 1px;">Street Art</h4><p>See more...</p></div>
-                                <div class="project-link-arrow" aria-hidden="true">↗</div>
+                                <div class="project-link-arrow" aria-hidden="true"><img decoding="async" src="assets/icon/arrow-artwork-icon.png" alt=""></div>
                             </div>
                         </div>
                         <div class="project-card-v" tabindex="0" style="background-image: url('assets/gallery/project-v12.png');">
                             <div class="project-info">
                                 <div><span class="project-tag">Artwork</span><h4 class="syne" style="letter-spacing: 1px;">Merch Design</h4><p>See more...</p></div>
-                                <div class="project-link-arrow" aria-hidden="true">↗</div>
+                                <div class="project-link-arrow" aria-hidden="true"><img decoding="async" src="assets/icon/arrow-artwork-icon.png" alt=""></div>
                             </div>
                         </div>
                         <div class="project-card-v" tabindex="0" style="background-image: url('assets/gallery/project-v13.png');">
                             <div class="project-info">
                                 <div><span class="project-tag">Artwork</span><h4 class="syne" style="letter-spacing: 1px;">Liquid Design</h4><p>See more...</p></div>
-                                <div class="project-link-arrow" aria-hidden="true">↗</div>
+                                <div class="project-link-arrow" aria-hidden="true"><img decoding="async" src="assets/icon/arrow-artwork-icon.png" alt=""></div>
                             </div>
                         </div>
                         <div class="project-card-v" tabindex="0" style="background-image: url('assets/gallery/project-v14.png');">
                             <div class="project-info">
                                 <div><span class="project-tag">Artwork</span><h4 class="syne" style="letter-spacing: 1px;">Ruan Design</h4><p>See more...</p></div>
-                                <div class="project-link-arrow" aria-hidden="true">↗</div>
+                                <div class="project-link-arrow" aria-hidden="true"><img decoding="async" src="assets/icon/arrow-artwork-icon.png" alt=""></div>
                             </div>
                         </div>
                         <div class="project-card-v" tabindex="0" style="background-image: url('assets/gallery/project-v15.png');">
                             <div class="project-info">
                                 <div><span class="project-tag">Artwork</span><h4 class="syne" style="letter-spacing: 1px;">Banner Project</h4><p>See more...</p></div>
-                                <div class="project-link-arrow" aria-hidden="true">↗</div>
+                                <div class="project-link-arrow" aria-hidden="true"><img decoding="async" src="assets/icon/arrow-artwork-icon.png" alt=""></div>
                             </div>
                         </div>
                         <div class="project-card-v" tabindex="0" style="background-image: url('assets/gallery/project-v16.png');">
                             <div class="project-info">
                                 <div><span class="project-tag">Artwork</span><h4 class="syne" style="letter-spacing: 1px;">Kafka Profile</h4><p>See more...</p></div>
-                                <div class="project-link-arrow" aria-hidden="true">↗</div>
+                                <div class="project-link-arrow" aria-hidden="true"><img decoding="async" src="assets/icon/arrow-artwork-icon.png" alt=""></div>
                             </div>
                         </div>
                         <div class="project-card-v" tabindex="0" style="background-image: url('assets/gallery/project-v17.png');">
                             <div class="project-info">
                                 <div><span class="project-tag">Artwork</span><h4 class="syne" style="letter-spacing: 1px;">Ruan Pfp</h4><p>See more...</p></div>
-                                <div class="project-link-arrow" aria-hidden="true">↗</div>
+                                <div class="project-link-arrow" aria-hidden="true"><img decoding="async" src="assets/icon/arrow-artwork-icon.png" alt=""></div>
                             </div>
+                        </div>
+                    </div>
+
+                    <div class="gallery-scroll-row">
+                        <div class="gallery-scrollbar" role="scrollbar" aria-orientation="horizontal" aria-label="Scroll artwork" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" tabindex="0"><div class="gallery-scrollbar-thumb"></div></div>
+                        <div class="gallery-nav-wrap">
+                            <button type="button" class="gallery-nav prev" aria-label="Scroll left" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+                            <button type="button" class="gallery-nav next" aria-label="Scroll right"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
                         </div>
                     </div>
                 </div>
@@ -1190,37 +1254,37 @@
                     <div class="project-card-h" tabindex="0" style="background-image: url('assets/gallery/project-h1.png');">
                         <div class="project-info">
                             <div><span class="project-tag">Artwork</span><h4 class="syne" style="letter-spacing: 1px;">Topup Website</h4><p>See more...</p></div>
-                            <div class="project-link-arrow" aria-hidden="true">↗</div>
+                            <div class="project-link-arrow" aria-hidden="true"><img decoding="async" src="assets/icon/arrow-artwork-icon.png" alt=""></div>
                         </div>
                     </div>
                     <div class="project-card-h" tabindex="0" style="background-image: url('assets/gallery/project-h2.png');">
                         <div class="project-info">
                             <div><span class="project-tag">Artwork</span><h4 class="syne" style="letter-spacing: 1px;">New Theme</h4><p>See more...</p></div>
-                            <div class="project-link-arrow" aria-hidden="true">↗</div>
+                            <div class="project-link-arrow" aria-hidden="true"><img decoding="async" src="assets/icon/arrow-artwork-icon.png" alt=""></div>
                         </div>
                     </div>
                     <div class="project-card-h" tabindex="0" style="background-image: url('assets/gallery/project-h3.png');">
                         <div class="project-info">
                             <div><span class="project-tag">Artwork</span><h4 class="syne" style="letter-spacing: 1px;">Old Theme</h4><p>See more...</p></div>
-                            <div class="project-link-arrow" aria-hidden="true">↗</div>
+                            <div class="project-link-arrow" aria-hidden="true"><img decoding="async" src="assets/icon/arrow-artwork-icon.png" alt=""></div>
                         </div>
                     </div>
                     <div class="project-card-h" tabindex="0" style="background-image: url('assets/gallery/project-h4.png');">
                         <div class="project-info">
                             <div><span class="project-tag">Artwork</span><h4 class="syne" style="letter-spacing: 1px;">Onic Esport</h4><p>See more...</p></div>
-                            <div class="project-link-arrow" aria-hidden="true">↗</div>
+                            <div class="project-link-arrow" aria-hidden="true"><img decoding="async" src="assets/icon/arrow-artwork-icon.png" alt=""></div>
                         </div>
                     </div>
                     <div class="project-card-h" tabindex="0" style="background-image: url('assets/gallery/project-h5.png');">
                         <div class="project-info">
                             <div><span class="project-tag">Artwork</span><h4 class="syne" style="letter-spacing: 1px;">Project Name H5</h4><p>See more...</p></div>
-                            <div class="project-link-arrow" aria-hidden="true">↗</div>
+                            <div class="project-link-arrow" aria-hidden="true"><img decoding="async" src="assets/icon/arrow-artwork-icon.png" alt=""></div>
                         </div>
                     </div>
                     <div class="project-card-h" tabindex="0" style="background-image: url('assets/gallery/project-h6.png');">
                         <div class="project-info">
                             <div><span class="project-tag">Artwork</span><h4 class="syne" style="letter-spacing: 1px;">Project Name H6</h4><p>See more...</p></div>
-                            <div class="project-link-arrow" aria-hidden="true">↗</div>
+                            <div class="project-link-arrow" aria-hidden="true"><img decoding="async" src="assets/icon/arrow-artwork-icon.png" alt=""></div>
                         </div>
                     </div>
                 </div>
@@ -1244,6 +1308,19 @@
 
     </main>
 
+
+    <!-- Pop-up info: rekomendasi desktop (mobile/tablet) + status pengembangan (semua device) -->
+    <div class="welcome-pop" id="welcomePop" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle" aria-hidden="true">
+        <div class="welcome-card">
+            <div class="welcome-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8h.01"/></svg>
+            </div>
+            <h2 id="welcomeTitle">Sebelum mulai</h2>
+            <p class="welcome-only-mobile">Website ini <strong>lebih nyaman dibuka di desktop</strong>, pengalaman visual dan animasinya paling maksimal di layar besar.</p>
+            <p>Website ini juga <strong>masih dalam tahap pengembangan</strong> untuk semua device, jadi masih ada bagian yang akan terus disempurnakan.</p>
+            <button type="button" class="welcome-btn" id="welcomeClose">Mengerti</button>
+        </div>
+    </div>
     <script>
         const scene = document.getElementById('scene');
         const pages = document.querySelectorAll('.page');
@@ -1322,7 +1399,7 @@
             'about-detail': [['.nav-back', 0, 'rv-wipe'], ['.about-detail-card', 1, 'rv-tilt']],
             'social': [['.nav-back', 0, 'rv-wipe'], ['.social-title', 1, 'rv-blur'], ['.social-card', 2, 'rv-fan'], ['.page-content > div:last-child', 7, '']],
             'gallery': [['.wave-full-bg', 0, 'rv-fade'], ['.gallery-header h1', 0, 'rv-wipe'], ['.gallery-header p', 1, 'rv-wipe-up'], ['.search-wrap', 2, 'rv-tilt'],
-                        ['.gallery-hero-art', 1, 'rv-side'], ['.project-track > *', 2, 'rv-card'], ['.gallery-nav-wrap', 5, 'rv-pop']],
+                        ['.gallery-hero-art', 1, 'rv-side'], ['.project-track > *', 2, 'rv-card'], ['.gallery-scrollbar', 5, 'rv-pop'], ['.gallery-nav-wrap', 5, 'rv-pop']],
             'review': [['.review-header h3:not(.right)', 0, 'rv-left'], ['.review-header img', 1, 'rv-pop'], ['.review-header h3.right', 2, 'rv-side']]
         };
         Object.entries(revealMap).forEach(([id, groups]) => {
@@ -1433,7 +1510,7 @@
         const galleryPage = document.getElementById('gallery');
         galleryPage.inert = true;
 
-        // --- Gallery: tombol kiri/kanan menggantikan scrollbar ---
+        // --- Gallery: scrollbar custom + tombol kiri/kanan ---
         const track = document.querySelector('.project-track');
         const btnPrev = document.querySelector('.gallery-nav.prev');
         const btnNext = document.querySelector('.gallery-nav.next');
@@ -1446,6 +1523,7 @@
                 const cs = getComputedStyle(track), g = parseFloat(cs.columnGap) || 14;
                 track.style.width = '';
                 mid.style.removeProperty('--track-w');
+                mid.style.removeProperty('--vw');
                 visibleCards = Math.max(1, Math.floor((track.clientWidth - parseFloat(cs.paddingLeft) * 2 + g) / (track.querySelector('.project-card-v').offsetWidth + g)));
                 maxScroll = track.scrollWidth - track.clientWidth;
                 updateGalleryNav();
@@ -1453,17 +1531,71 @@
             }
             const card = track.querySelector('.project-card-v');
             const gap = parseFloat(getComputedStyle(track).columnGap) || 25;
-            visibleCards = Math.max(1, Math.floor((mid.clientWidth + gap) / (card.offsetWidth + gap)));
-            const w = visibleCards * card.offsetWidth + (visibleCards - 1) * gap;
+            // Desktop: 5 kartu sekaligus (lebar kartu menyesuaikan, maks 220px); jika ruang terlalu sempit (<190px/kartu) turun ke 4 kartu
+            let n = 5, vw = Math.floor((mid.clientWidth - gap * (n - 1)) / n);
+            if (vw < 190) { n = 4; vw = Math.floor((mid.clientWidth - gap * (n - 1)) / n); }
+            vw = Math.min(vw, n === 5 ? 220 : 260);
+            mid.style.setProperty('--vw', vw + 'px');
+            visibleCards = n;
+            const w = n * vw + (n - 1) * gap;
             track.style.width = (w + 48) + 'px'; // + padding kiri/kanan 24px untuk bayangan
             mid.style.setProperty('--track-w', w + 'px');
             maxScroll = track.scrollWidth - track.clientWidth; // di-cache: tidak membaca layout tiap event scroll
             updateGalleryNav();
         }
+        // Scrollbar custom: thumb mengikuti scroll track; bisa di-drag, diklik, dan dipakai dengan keyboard
+        const gBar = document.querySelector('.gallery-scrollbar');
+        const gThumb = gBar.querySelector('.gallery-scrollbar-thumb');
+        let gThumbW = 40, gDrag = null;
+        function syncGalleryBar() {
+            const railW = gBar.clientWidth;
+            if (!railW) return;
+            const scrollable = maxScroll > 4;
+            gBar.classList.toggle('no-scroll', !scrollable);
+            gThumbW = scrollable ? Math.max(40, Math.round(railW * track.clientWidth / track.scrollWidth)) : railW;
+            const pos = scrollable ? Math.min(1, Math.max(0, track.scrollLeft / maxScroll)) : 0;
+            gThumb.style.width = gThumbW + 'px';
+            gThumb.style.transform = 'translateX(' + (pos * (railW - gThumbW)).toFixed(1) + 'px)';
+            gBar.setAttribute('aria-valuenow', Math.round(pos * 100));
+        }
         function updateGalleryNav() {
             btnPrev.disabled = track.scrollLeft <= 2;
             btnNext.disabled = track.scrollLeft >= maxScroll - 2;
+            syncGalleryBar();
         }
+        gThumb.addEventListener('pointerdown', e => {
+            if (e.button !== 0) return;
+            e.preventDefault(); e.stopPropagation();
+            gDrag = { x: e.clientX, left: track.scrollLeft, id: e.pointerId };
+            gThumb.setPointerCapture(e.pointerId);
+            gBar.classList.add('dragging');
+            track.style.scrollSnapType = 'none'; track.style.scrollBehavior = 'auto';
+        });
+        gThumb.addEventListener('pointermove', e => {
+            if (!gDrag) return;
+            const free = gBar.clientWidth - gThumbW;
+            if (free > 0) track.scrollLeft = gDrag.left + (e.clientX - gDrag.x) * (maxScroll / free);
+        });
+        const endGalleryDrag = () => {
+            if (!gDrag) return;
+            gDrag = null; gBar.classList.remove('dragging');
+            track.style.scrollSnapType = ''; track.style.scrollBehavior = '';
+        };
+        gThumb.addEventListener('pointerup', endGalleryDrag);
+        gThumb.addEventListener('pointercancel', endGalleryDrag);
+        gBar.addEventListener('pointerdown', e => { // klik di rail: loncat ke posisi itu
+            if (e.target === gThumb || e.button !== 0) return;
+            const r = gBar.getBoundingClientRect(), free = r.width - gThumbW;
+            if (free <= 0) return;
+            const ratio = Math.min(1, Math.max(0, (e.clientX - r.left - gThumbW / 2) / free));
+            track.scrollTo({ left: ratio * maxScroll, behavior: reduceMotion ? 'auto' : 'smooth' });
+        });
+        gBar.addEventListener('keydown', e => {
+            if (e.key === 'ArrowRight') { e.preventDefault(); scrollGallery(1); }
+            else if (e.key === 'ArrowLeft') { e.preventDefault(); scrollGallery(-1); }
+            else if (e.key === 'Home') { e.preventDefault(); track.scrollTo({ left: 0, behavior: 'smooth' }); }
+            else if (e.key === 'End') { e.preventDefault(); track.scrollTo({ left: maxScroll, behavior: 'smooth' }); }
+        });
         function scrollGallery(dir) {
             const card = track.querySelector('.project-card-v');
             const gap = parseFloat(getComputedStyle(track).columnGap) || 25;
@@ -1476,6 +1608,16 @@
         window.addEventListener('resize', queueFit);
         window.addEventListener('load', fitGalleryTrack);
         fitGalleryTrack();
+        // Ponsel: posisi awal = 1 langkah card (card ke-2 di tengah, card 1 dan 3 mengintip di kiri-kanan)
+        function startGalleryOneStep() {
+            if (!window.matchMedia('(max-width: 700px)').matches) return;
+            const c = track.querySelector('.project-card-v');
+            const gap = parseFloat(getComputedStyle(track).columnGap) || 14;
+            track.scrollLeft = c.offsetWidth + gap;
+            updateGalleryNav();
+        }
+        startGalleryOneStep();
+        window.addEventListener('load', startGalleryOneStep);
 
         // --- Social (ponsel): bar bawah jadi indikator swipe yang sungguhan ---
         const socialTrack = document.querySelector('.social-track'), socialThumb = document.querySelector('.social-progress > div');
@@ -1703,6 +1845,35 @@
             requestAnimationFrame(frame);
         }
         wake();
+
+        // --- Pop-up info di Home: muncul setiap halaman dibuka/di-refresh (tutup lewat tombol, klik latar, atau Esc) ---
+        (function () {
+            const pop = document.getElementById('welcomePop');
+            const btn = document.getElementById('welcomeClose');
+            if (!pop || !btn) return;
+            let lastFocus = null;
+            function close() {
+                pop.classList.remove('show');
+                pop.setAttribute('aria-hidden', 'true');
+                document.removeEventListener('keydown', onKey);
+                if (lastFocus && lastFocus.focus) lastFocus.focus({ preventScroll: true });
+            }
+            function onKey(e) {
+                if (e.key === 'Escape') close();
+                else if (e.key === 'Tab') { e.preventDefault(); btn.focus(); } // fokus tetap di dialog
+            }
+            function open() {
+                lastFocus = document.activeElement;
+                pop.setAttribute('aria-hidden', 'false');
+                pop.classList.add('show');
+                document.addEventListener('keydown', onKey);
+                btn.focus({ preventScroll: true });
+            }
+            btn.addEventListener('click', close);
+            pop.addEventListener('click', e => { if (e.target === pop) close(); });
+            // Tunggu animasi masuk Home selesai dulu supaya terasa halus
+            setTimeout(open, reduceMotion ? 300 : 1400);
+        })();
     </script>
 </body>
 </html>
