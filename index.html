@@ -901,7 +901,14 @@
         .welcome-btn:focus-visible { outline: 2px solid var(--accent-cyan); outline-offset: 3px; }
         @media (max-width: 1100px) { .welcome-only-mobile { display: block; } }
         @media (prefers-reduced-motion: reduce) { .welcome-pop, .welcome-card { transition-duration: 0.01s; } }
-    </style>
+    
+        /* Gallery tablet & ponsel: animasi masuk card cuma fade (tanpa translate/rotate/scale).
+           Scroll-snap menghitung posisi snap dari kotak card yang SUDAH tertransform, jadi translate 110px pada animasi
+           membuat browser men-snap ulang track lalu balik lagi = card potrait "teleport" ke tengah. */
+        @media (max-width: 1100px) {
+            .page.active .project-track > .rv-card { animation-name: rvInFade; animation-duration: 0.9s; animation-timing-function: var(--ease-out); }
+        }
+</style>
 </head>
 <body>
 
