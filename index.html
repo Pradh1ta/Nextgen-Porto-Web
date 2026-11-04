@@ -1075,10 +1075,10 @@
                         <div class="social-wave-bg"></div>
                         <img decoding="async" src="assets/social/ig-icon.png" class="social-icon-huge">
                     </div>
-                    <div class="social-card" onclick="window.open('https://github.com/pradhita', 'blank')" style="cursor: pointer;" >
+                    <div class="social-card" onclick="window.open('https://github.com/pradh1ta', 'blank')" style="cursor: pointer;" >
                         <div class="social-card-header"><span>Github</span><span>Personal</span></div>
                         <h3 class="syne" style="font-family: Coolvetica; font-weight: 100; letter-spacing: 1px;" >Explore<br>Github</h3>
-                        <p>https://github.com/pradhita</p>
+                        <p>https://github.com/pradh1ta</p>
                         <div class="social-wave-bg"></div>
                         <img decoding="async" src="assets/social/github-icon.png" class="social-icon-huge">
                     </div>
@@ -1317,7 +1317,7 @@
             </div>
             <h2 id="welcomeTitle">Sebelum mulai</h2>
             <p class="welcome-only-mobile">Website ini <strong>lebih nyaman dibuka di desktop</strong>, pengalaman visual dan animasinya paling maksimal di layar besar.</p>
-            <p>Website ini juga <strong>masih dalam tahap pengembangan</strong> untuk semua device, jadi masih ada bagian yang akan terus disempurnakan.</p>
+            <p>Website ini juga <strong>masih dalam tahap pengembangan</strong>, jadi masih ada bagian yang akan terus disempurnakan.</p>
             <button type="button" class="welcome-btn" id="welcomeClose">Mengerti</button>
         </div>
     </div>
@@ -1514,7 +1514,7 @@
         const track = document.querySelector('.project-track');
         const btnPrev = document.querySelector('.gallery-nav.prev');
         const btnNext = document.querySelector('.gallery-nav.next');
-        let visibleCards = 4, maxScroll = 0, navRaf = 0, fitRaf = 0;
+        let visibleCards = 4, maxScroll = 0, navRaf = 0, fitRaf = 0; let galleryTouched = false; // dideklarasikan di atas karena fitGalleryTrack() memanggil startGalleryOneStep()
 
         // Lebar track dipas ke jumlah kartu UTUH yang muat, sehingga tidak ada kartu terpotong di kanan
         function fitGalleryTrack() {
@@ -1527,6 +1527,7 @@
                 visibleCards = Math.max(1, Math.floor((track.clientWidth - parseFloat(cs.paddingLeft) * 2 + g) / (track.querySelector('.project-card-v').offsetWidth + g)));
                 maxScroll = track.scrollWidth - track.clientWidth;
                 updateGalleryNav();
+                if (typeof startGalleryOneStep === 'function') startGalleryOneStep();
                 return;
             }
             const card = track.querySelector('.project-card-v');
@@ -1609,15 +1610,28 @@
         window.addEventListener('load', fitGalleryTrack);
         fitGalleryTrack();
         // Ponsel: posisi awal = 1 langkah card (card ke-2 di tengah, card 1 dan 3 mengintip di kiri-kanan)
+        // Anti-flicker: posisi awal dipasang SEBELUM card terlihat (saat slide Gallery mulai dibuka, card masih opacity 0
+        // karena animasi reveal-nya masih delay), snap dimatikan sesaat supaya browser tidak men-snap ulang ke card 1,
+        // dan tidak menimpa posisi kalau user sudah menggeser sendiri.
+        ['pointerdown', 'touchstart', 'wheel', 'keydown'].forEach(ev => track.addEventListener(ev, () => { galleryTouched = true; }, { passive: true }));
+        [btnPrev, btnNext, gBar].forEach(el => el.addEventListener('pointerdown', () => { galleryTouched = true; }, { passive: true }));
         function startGalleryOneStep() {
-            if (!window.matchMedia('(max-width: 700px)').matches) return;
+            if (galleryTouched || !window.matchMedia('(max-width: 700px)').matches) return;
             const c = track.querySelector('.project-card-v');
+            if (!c || !c.offsetWidth) return;
             const gap = parseFloat(getComputedStyle(track).columnGap) || 14;
-            track.scrollLeft = c.offsetWidth + gap;
+            const target = Math.round(c.offsetWidth + gap);
+            if (Math.abs(track.scrollLeft - target) > 1) {
+                track.style.scrollSnapType = 'none'; track.style.scrollBehavior = 'auto';
+                track.scrollLeft = target;
+                void track.offsetWidth; // paksa layout agar posisi langsung terpasang
+                track.style.scrollSnapType = ''; track.style.scrollBehavior = '';
+            }
             updateGalleryNav();
         }
         startGalleryOneStep();
         window.addEventListener('load', startGalleryOneStep);
+        if (document.fonts && document.fonts.ready) document.fonts.ready.then(startGalleryOneStep);
 
         // --- Social (ponsel): bar bawah jadi indikator swipe yang sungguhan ---
         const socialTrack = document.querySelector('.social-track'), socialThumb = document.querySelector('.social-progress > div');
@@ -1776,6 +1790,7 @@
             });
 
             galleryPage.inert = index !== 5;
+            if (index === 5) { startGalleryOneStep(); requestAnimationFrame(startGalleryOneStep); } // posisi awal dipasang sebelum card muncul
             clearTimeout(revealTimer);
             revealTimer = setTimeout(() => checkReveal(pages[index]), (Math.max(0.15, arriveAt) + 0.6) * 1000);
 
